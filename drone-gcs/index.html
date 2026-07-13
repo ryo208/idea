@@ -15,152 +15,161 @@
   }
   :root{
     color-scheme:dark;
-    --ink:#EAF0F6; --sec:rgba(234,240,246,.62); --mut:rgba(234,240,246,.38);
-    --hair:rgba(255,255,255,.09); --hair2:rgba(255,255,255,.05);
-    --glass:rgba(5,9,15,.58);
-    --cy:#2F9EC2; --cyb:#7FD4EF; --am:#B08A3E; --amb:#E4C079;
-    --ok:#6FBF7F; --warn:#D9A741; --crit:#D96B6B;
+    --ink:#E9E2D6; --sec:rgba(233,226,214,.62); --mut:rgba(233,226,214,.34);
+    --amber:#E8A64A; --amber2:rgba(232,166,74,.55); --amber3:rgba(232,166,74,.22);
+    --teal:#1CA88E; --tealb:#5BCDB6;
+    --chA:#1CA88E; --chS:#B07E3B;
+    --red:#E86B6B; --ok:#8FBF7F; --warn:#D9A741;
+    --hair:rgba(232,166,74,.18); --hair2:rgba(232,166,74,.09);
+    --glass:rgba(6,9,10,.52);
     --din:"D-DIN","DIN Alternate","Bahnschrift","Franklin Gothic Medium",Arial,sans-serif;
     --mono:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,monospace;
+    --jp:"Hiragino Kaku Gothic ProN","Noto Sans JP","Yu Gothic",sans-serif;
   }
   html,body{height:100%; margin:0;}
-  body{background:#04070C; color:var(--ink); font-family:var(--din); overflow:hidden;}
+  body{background:#05070A; color:var(--ink); font-family:var(--din); overflow:hidden;}
   canvas{display:block;}
+  button{-webkit-tap-highlight-color:transparent;}
   #stage{position:fixed; inset:0; overflow:hidden;}
   #view{position:absolute; inset:0; width:100%; height:100%;}
-  #vig{position:absolute; inset:0; pointer-events:none;
-    background:
-      radial-gradient(ellipse at 50% 42%, transparent 52%, rgba(0,0,0,.5)),
-      linear-gradient(rgba(0,0,0,.55), transparent 14%, transparent 74%, rgba(0,0,0,.78));}
+  #vig{position:absolute; inset:0; pointer-events:none; z-index:2;
+    background:radial-gradient(ellipse at 50% 45%, transparent 55%, rgba(0,0,0,.62));}
+  #scan{position:absolute; inset:0; pointer-events:none; z-index:3; opacity:.5;
+    background:repeating-linear-gradient(0deg, rgba(0,0,0,.22) 0 1px, transparent 1px 3px);}
 
   /* ---------- callout ---------- */
-  #callout{
-    position:absolute; left:0; right:0; top:26%; text-align:center; pointer-events:none;
-    font-size:38px; font-weight:600; letter-spacing:.34em; text-indent:.34em;
-    color:#fff; text-shadow:0 0 24px rgba(127,212,239,.55), 0 2px 8px rgba(0,0,0,.8);
-    opacity:0; transition:opacity .5s;
+  #callout{position:absolute; left:0; right:0; top:24%; text-align:center; pointer-events:none;
+    z-index:6; opacity:0; transition:opacity .45s;}
+  #callout .en{display:block; font-size:34px; font-weight:600; letter-spacing:.42em; text-indent:.42em;
+    color:var(--amber); text-shadow:0 0 22px rgba(232,166,74,.5);}
+  #callout .jp{display:block; font-family:var(--jp); font-size:11px; letter-spacing:.55em; text-indent:.55em;
+    color:var(--sec); margin-top:8px;}
+  #callout.show{opacity:1; animation:glitch .42s steps(2) 1;}
+  @keyframes glitch{
+    0%{transform:translate(-3px,1px); filter:none;
+       text-shadow:3px 0 rgba(28,168,142,.9),-3px 0 rgba(232,107,107,.9);}
+    30%{transform:translate(3px,-1px);}
+    60%{transform:translate(-1px,0);
+       text-shadow:1px 0 rgba(28,168,142,.6),-1px 0 rgba(232,107,107,.6);}
+    100%{transform:none;}
   }
-  #callout.show{opacity:1;}
-  @media (prefers-reduced-motion:reduce){ #callout{transition:none;} }
+  @media (prefers-reduced-motion:reduce){
+    #callout{transition:none;} #callout.show{animation:none;}
+  }
 
-  /* ---------- top bar ---------- */
-  #top{position:absolute; top:0; left:0; right:0; display:flex; justify-content:space-between;
-    align-items:flex-start; padding:16px 22px; z-index:4;}
-  .brand{font-size:15px; font-weight:600; letter-spacing:.3em;}
-  .brand small{display:block; font-weight:400; font-size:9px; letter-spacing:.24em; color:var(--sec); margin-top:4px;}
-  .topright{display:flex; align-items:center; gap:12px; font-size:10px; letter-spacing:.14em;}
-  .badge{padding:3px 10px; border:1px solid var(--hair); color:var(--sec);}
-  .badge.sim{color:var(--amb); border-color:rgba(228,192,121,.35);}
-  .badge.live{color:var(--ok); border-color:rgba(111,191,127,.4);}
-  #pktRate{color:var(--mut); font-family:var(--mono); font-size:10px;}
-  #sndBtn{background:none; border:1px solid var(--hair); color:var(--sec); font-family:var(--din);
-    font-size:10px; letter-spacing:.14em; padding:3px 10px; cursor:pointer;}
-  #sndBtn.on{color:var(--cyb); border-color:rgba(127,212,239,.4);}
-  #sndBtn:focus-visible{outline:2px solid var(--cyb);}
+  /* ---------- chrome (top) ---------- */
+  #top{position:absolute; top:0; left:0; right:0; z-index:5; display:flex;
+    justify-content:space-between; align-items:flex-start; padding:16px 20px;}
+  .brand{font-size:12px; font-weight:600; letter-spacing:.34em; color:var(--sec);}
+  .brand small{display:block; font-family:var(--jp); font-weight:400; font-size:8.5px;
+    letter-spacing:.3em; color:var(--mut); margin-top:4px;}
+  .topright{display:flex; align-items:center; gap:10px;}
+  .tbtn{background:none; border:none; cursor:pointer; font-family:var(--jp);
+    font-size:9.5px; letter-spacing:.22em; color:var(--sec); padding:4px 2px;}
+  .tbtn::before{content:"[ "; color:var(--amber2);} .tbtn::after{content:" ]"; color:var(--amber2);}
+  .tbtn:hover{color:var(--amber);}
+  .tbtn.on{color:var(--amber);}
+  .tbtn:focus-visible{outline:1px solid var(--amber); outline-offset:2px;}
+  .badge{font-size:9px; letter-spacing:.2em; padding:3px 9px; border:1px solid var(--hair); color:var(--sec);}
+  .badge.sim{color:var(--amber); border-color:rgba(232,166,74,.4);}
+  .badge.live{color:var(--tealb); border-color:rgba(91,205,182,.45);}
 
-  /* ---------- side columns ---------- */
-  .colwrap{position:absolute; top:64px; bottom:148px; overflow-y:auto; z-index:3;
-    display:flex; flex-direction:column; gap:8px; scrollbar-width:none;}
-  .colwrap::-webkit-scrollbar{display:none;}
-  .colwrap{mask-image:linear-gradient(#000 calc(100% - 26px), transparent);
-    -webkit-mask-image:linear-gradient(#000 calc(100% - 26px), transparent);}
-  #lcol{left:16px; width:252px;}
-  #rcol{right:16px; width:288px;}
-  .panel{background:var(--glass); border:1px solid var(--hair); padding:10px 12px;
-    backdrop-filter:blur(9px); -webkit-backdrop-filter:blur(9px);}
-  .ptitle{font-size:9px; font-weight:400; letter-spacing:.26em; color:var(--mut); margin:0 0 8px;}
+  /* ---------- clock ---------- */
+  #clockbox{position:absolute; top:14px; left:50%; transform:translateX(-50%);
+    text-align:center; z-index:5;}
+  #clockbox .m{font-size:8.5px; letter-spacing:.4em; text-indent:.4em; color:var(--mut);}
+  #tclock{font-size:34px; font-weight:400; letter-spacing:.06em; line-height:1.15;
+    font-variant-numeric:tabular-nums; color:var(--ink); text-shadow:0 0 16px rgba(0,0,0,.6);}
+  #phaseName{font-family:var(--jp); font-size:9.5px; letter-spacing:.34em; text-indent:.34em; color:var(--amber);}
 
-  .ro{display:flex; justify-content:space-between; align-items:baseline; padding:3.5px 0; border-bottom:1px solid var(--hair2);}
+  /* ---------- bottom-left: log stream + radar ---------- */
+  #bl{position:absolute; left:20px; bottom:20px; z-index:5; display:flex; flex-direction:column; gap:10px;}
+  #logstream{font-family:var(--mono); font-size:9.5px; line-height:1.9; color:var(--sec);
+    font-variant-numeric:tabular-nums; width:330px;}
+  #logstream div{display:flex; gap:8px; white-space:nowrap; overflow:hidden;}
+  #logstream .ts{color:var(--mut); flex:0 0 74px;}
+  #logstream .ev.hi{color:var(--amber);} #logstream .ev.ok{color:var(--tealb);}
+  #logstream .ev.warn{color:var(--warn);} #logstream .ev.cmd{color:var(--amber2);}
+  #logstream div:nth-child(2){opacity:.72;} #logstream div:nth-child(3){opacity:.5;}
+  #logstream div:nth-child(4){opacity:.32;} #logstream div:nth-child(5){opacity:.18;}
+  #radar{width:176px; height:176px;}
+  #radarData{font-family:var(--mono); font-size:8.5px; letter-spacing:.06em; color:var(--mut);
+    width:330px; font-variant-numeric:tabular-nums;}
+
+  /* ---------- bottom-right: commands ---------- */
+  #cmds{position:absolute; right:20px; bottom:22px; z-index:5; display:grid;
+    grid-template-columns:1fr 1fr; gap:7px 14px; text-align:right;}
+  #cmds button{background:none; border:none; cursor:pointer; font-family:var(--jp);
+    font-size:10.5px; letter-spacing:.2em; color:var(--sec); padding:4px 0; text-align:right;}
+  #cmds button::before{content:"[ "; color:var(--amber2);} #cmds button::after{content:" ]"; color:var(--amber2);}
+  #cmds button:hover:enabled{color:var(--amber);}
+  #cmds button:disabled{opacity:.22; cursor:default;}
+  #cmds button.danger:hover:enabled{color:var(--red);}
+  #cmds button:focus-visible{outline:1px solid var(--amber); outline-offset:2px;}
+
+  /* ---------- thin timeline ---------- */
+  #tl{position:absolute; left:50%; bottom:34px; transform:translateX(-50%);
+    width:min(44vw,620px); height:30px; z-index:4;}
+  .tl-line{position:absolute; left:0; right:0; top:8px; height:1px; background:rgba(232,166,74,.22);}
+  .tl-line i{display:block; height:100%; width:0; background:var(--amber); box-shadow:0 0 6px rgba(232,166,74,.8);}
+  .tl-node{position:absolute; top:5px; width:1px;}
+  .tl-node .dot{width:5px; height:5px; border:1px solid rgba(232,166,74,.4); transform:rotate(45deg);
+    background:#05070A; margin-left:-3px;}
+  .tl-node.done .dot{background:var(--amber); border-color:var(--amber);}
+  .tl-node .lbl{position:absolute; top:12px; left:0; transform:translateX(-50%);
+    font-size:7.5px; letter-spacing:.22em; color:var(--mut); white-space:nowrap;}
+  .tl-node.done .lbl{color:var(--sec);}
+  .tl-node.first .lbl{transform:none; margin-left:-2px;}
+  .tl-node.last .lbl{transform:translateX(-100%); margin-left:3px;}
+
+  /* ---------- detail layer (toggle) ---------- */
+  #detail{position:absolute; top:64px; right:16px; bottom:212px; width:272px; z-index:5;
+    display:none; flex-direction:column; gap:8px; overflow-y:auto; scrollbar-width:none;
+    mask-image:linear-gradient(#000 calc(100% - 24px), transparent);
+    -webkit-mask-image:linear-gradient(#000 calc(100% - 24px), transparent);}
+  #detail::-webkit-scrollbar{display:none;}
+  #stage.detail #detail{display:flex;}
+  .panel{background:var(--glass); border:1px solid var(--hair2); padding:9px 12px;
+    backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px);}
+  .ptitle{font-family:var(--jp); font-size:8.5px; font-weight:400; letter-spacing:.3em;
+    color:var(--mut); margin:0 0 7px;}
+  .ro{display:flex; justify-content:space-between; align-items:baseline; padding:3px 0;
+    border-bottom:1px solid var(--hair2);}
   .ro:last-child{border-bottom:0;}
-  .ro .l{font-size:9px; letter-spacing:.2em; color:var(--sec);}
-  .ro .v{font-size:19px; font-weight:400; font-variant-numeric:tabular-nums;}
-  .ro .v small{font-size:10px; color:var(--mut); margin-left:3px; letter-spacing:.08em;}
-  .ro .v.big{font-size:27px; color:#fff;}
-  .battbar{height:3px; background:var(--hair2); margin-top:7px; overflow:hidden;}
-  .battbar i{display:block; height:100%; background:var(--ok); width:100%; transition:width .5s linear;}
-  .battbar i.warn{background:var(--warn);} .battbar i.crit{background:var(--crit);}
-  .gpsline{display:flex; justify-content:space-between; font-family:var(--mono); font-size:10.5px;
-    color:var(--sec); padding:2.5px 0; font-variant-numeric:tabular-nums;}
+  .ro .l{font-size:8.5px; letter-spacing:.2em; color:var(--sec);}
+  .ro .v{font-size:17px; font-variant-numeric:tabular-nums;}
+  .ro .v small{font-size:9px; color:var(--mut); margin-left:3px;}
+  .battbar{height:2px; background:var(--hair2); margin-top:6px; overflow:hidden;}
+  .battbar i{display:block; height:100%; background:var(--teal); width:100%; transition:width .5s linear;}
+  .battbar i.warn{background:var(--warn);} .battbar i.crit{background:var(--red);}
+  .gpsline{display:flex; justify-content:space-between; font-family:var(--mono); font-size:10px;
+    color:var(--sec); padding:2px 0; font-variant-numeric:tabular-nums;}
   .gpsline b{color:var(--ink); font-weight:400;}
-
-  #map{width:100%; aspect-ratio:1; }
-  .chart{position:relative; margin-top:2px;}
-  .chart canvas{width:100%; height:56px;}
-  .chart .ctitle{font-size:8.5px; letter-spacing:.2em; color:var(--mut); margin:6px 0 3px;}
-  .tooltip{position:absolute; pointer-events:none; display:none; z-index:5;
-    background:rgba(4,8,13,.94); border:1px solid var(--hair);
-    font-family:var(--mono); font-size:10px; padding:4px 7px; white-space:nowrap;
-    font-variant-numeric:tabular-nums;}
-
-  #att{width:100%; height:128px;}
-  #polar{width:100%; height:148px;}
+  #att{width:100%; height:118px;}
+  #polar{width:100%; height:136px;}
   .numrow{display:flex; justify-content:space-around; margin-top:5px;}
   .numrow div{text-align:center;}
-  .numrow .l{font-size:8px; letter-spacing:.2em; color:var(--mut);}
-  .numrow .v{font-size:14px; font-variant-numeric:tabular-nums;}
-  .rssibar{height:3px; background:var(--hair2); margin-top:7px; overflow:hidden;}
-  .rssibar i{display:block; height:100%; background:var(--cy); width:0;}
+  .numrow .l{font-size:7.5px; letter-spacing:.2em; color:var(--mut);}
+  .numrow .v{font-size:13px; font-variant-numeric:tabular-nums;}
+  .chart{position:relative;}
+  .chart canvas{width:100%; height:54px;}
+  .chart .ctitle{font-size:8px; letter-spacing:.2em; color:var(--mut); margin:6px 0 3px;}
+  .tooltip{position:absolute; pointer-events:none; display:none; z-index:7;
+    background:rgba(5,8,10,.94); border:1px solid var(--hair);
+    font-family:var(--mono); font-size:9.5px; padding:3px 6px; white-space:nowrap;
+    font-variant-numeric:tabular-nums;}
 
-  .cmds{display:grid; grid-template-columns:repeat(3,1fr); gap:6px;}
-  .cmds button{font-family:var(--din); font-size:10.5px; letter-spacing:.16em; cursor:pointer;
-    background:rgba(255,255,255,.04); color:var(--ink); border:1px solid var(--hair); padding:9px 2px;}
-  .cmds button:hover:enabled{border-color:var(--cyb); color:var(--cyb); background:rgba(127,212,239,.06);}
-  .cmds button:focus-visible{outline:2px solid var(--cyb); outline-offset:1px;}
-  .cmds button:disabled{color:var(--mut); opacity:.4; cursor:default;}
-  .cmds button.danger:hover:enabled{border-color:var(--crit); color:var(--crit); background:rgba(217,107,107,.06);}
-
-  #log{flex:1; min-height:90px; overflow-y:auto; font-family:var(--mono); font-size:10px;
-    line-height:1.75; font-variant-numeric:tabular-nums; scrollbar-width:none;}
-  #log::-webkit-scrollbar{display:none;}
-  #log div{display:flex; gap:8px; border-bottom:1px solid var(--hair2); padding:1px 0;}
-  #log .ts{color:var(--mut); flex:0 0 78px;}
-  #log .ev{color:var(--sec);} #log .ev.hi{color:var(--cyb);} #log .ev.ok{color:var(--ok);}
-  #log .ev.warn{color:var(--warn);} #log .ev.cmd{color:var(--amb);}
-  .logpanel{display:flex; flex-direction:column; flex:1; min-height:110px;}
-
-  /* ---------- bottom bar (SpaceX signature) ---------- */
-  #bar{position:absolute; left:0; right:0; bottom:0; height:150px; z-index:4;
-    display:flex; align-items:center; gap:30px; padding:0 30px 4px;
-    background:linear-gradient(transparent, rgba(2,4,7,.68) 34%, rgba(2,4,7,.94));}
-  .gcluster{display:flex; gap:6px;}
-  .gcluster canvas{width:126px; height:126px;}
-  .clockblock{text-align:center; min-width:300px;}
-  .clockblock .mission{font-size:10px; letter-spacing:.34em; color:var(--sec); margin-bottom:2px;}
-  #tclock{font-size:52px; font-weight:400; letter-spacing:.05em; line-height:1.05;
-    font-variant-numeric:tabular-nums; text-shadow:0 2px 12px rgba(0,0,0,.7);}
-  #phaseName{font-size:10px; letter-spacing:.3em; color:var(--cyb); margin-top:3px;}
-
-  #timeline{flex:1; position:relative; height:64px; min-width:260px;}
-  .tl-line{position:absolute; left:0; right:0; top:26px; height:2px; background:rgba(255,255,255,.16);}
-  .tl-line i{display:block; height:100%; width:0; background:#fff; box-shadow:0 0 8px rgba(127,212,239,.8);}
-  .tl-node{position:absolute; top:20px; width:1px;}
-  .tl-node .dot{width:7px; height:7px; border:1.5px solid rgba(255,255,255,.4); border-radius:50%;
-    background:#04070C; margin-left:-4.5px; margin-top:3.5px;}
-  .tl-node.done .dot{background:#fff; border-color:#fff; box-shadow:0 0 7px rgba(127,212,239,.9);}
-  .tl-node .lbl{position:absolute; top:18px; left:0; transform:translateX(-50%);
-    font-size:8.5px; letter-spacing:.18em; color:var(--mut); white-space:nowrap;}
-  .tl-node.done .lbl{color:var(--sec);}
-  .tl-node.first .lbl{transform:none; margin-left:-3px;}
-  .tl-node.last .lbl{transform:translateX(-100%); margin-left:4px;}
-
-  /* ---------- shake ---------- */
   @keyframes shake{
     0%,100%{transform:translate(0,0)} 20%{transform:translate(1.6px,-1.2px)}
     40%{transform:translate(-1.4px,1.1px)} 60%{transform:translate(1.2px,1.4px)} 80%{transform:translate(-1.6px,-1px)}
   }
-  #stage.shake #view, #stage.shake #bar, #stage.shake .colwrap{animation:shake .16s linear infinite;}
-  @media (prefers-reduced-motion:reduce){ #stage.shake #view,#stage.shake #bar,#stage.shake .colwrap{animation:none;} .battbar i{transition:none;} }
+  #stage.shake #view{animation:shake .16s linear infinite;}
+  @media (prefers-reduced-motion:reduce){ #stage.shake #view{animation:none;} }
 
-  /* ---------- narrow fallback ---------- */
-  @media (max-width:940px){
-    body{overflow:auto;}
-    #stage{position:relative; min-height:100vh;}
-    .colwrap{position:relative; inset:auto; width:auto; margin:8px 12px; top:auto; bottom:auto; overflow:visible;}
-    #lcol{padding-top:56px;}
-    #view{position:fixed;}
-    #bar{position:sticky; bottom:0; flex-wrap:wrap; height:auto; padding:10px 16px; gap:14px;}
-    #tclock{font-size:38px;}
-    .clockblock{min-width:200px;}
+  @media (max-width:860px){
+    #logstream,#radarData{width:44vw;}
+    #tl{display:none;}
+    #clockbox #tclock{font-size:26px;}
   }
 </style>
 </head>
@@ -169,43 +178,85 @@
 <div id="stage">
   <canvas id="view" aria-hidden="true"></canvas>
   <div id="vig"></div>
-  <div id="callout" aria-live="polite"></div>
+  <div id="scan"></div>
+  <div id="callout" aria-live="polite"><span class="en" id="coEn"></span><span class="jp" id="coJp"></span></div>
 
   <header id="top">
-    <div class="brand">DOLUCK FLIGHT OPS<small>DRONE GCS · TRACKING STATION 1</small></div>
+    <div class="brand">DOLUCK FLIGHT OPS<small>無人機管制システム // TRACKING STATION-1</small></div>
     <div class="topright">
-      <button id="sndBtn" aria-pressed="false">SOUND OFF</button>
+      <button id="detBtn" class="tbtn" aria-pressed="false">詳細 DETAIL</button>
+      <button id="sndBtn" class="tbtn" aria-pressed="false">音声 OFF</button>
       <span id="linkBadge" class="badge sim">SIM</span>
-      <span id="pktRate">-- pkt/s</span>
     </div>
   </header>
 
-  <!-- ============ LEFT ============ -->
-  <aside id="lcol" class="colwrap">
+  <div id="clockbox">
+    <div class="m">MISSION IDEA-1</div>
+    <div id="tclock">T- 00:00:10</div>
+    <div id="phaseName">待機 // PAD</div>
+  </div>
+
+  <div id="bl">
+    <div id="logstream" aria-live="polite"></div>
+    <canvas id="radar" role="img" aria-label="ground track radar"></canvas>
+    <div id="radarData">--</div>
+  </div>
+
+  <div id="cmds">
+    <button id="cArm">起動 ARM</button>
+    <button id="cLaunch">発進 LAUNCH</button>
+    <button id="cHold">保持 HOLD</button>
+    <button id="cResume">再開 RESUME</button>
+    <button id="cRtl" class="danger">帰投 RTL</button>
+    <button id="cLand" class="danger">着陸 LAND</button>
+  </div>
+
+  <div id="tl" aria-label="mission timeline">
+    <div class="tl-line"><i id="tlFill"></i></div>
+    <div id="tlNodes"></div>
+  </div>
+
+  <!-- ============ DETAIL LAYER (toggle) ============ -->
+  <aside id="detail">
     <div class="panel">
-      <h2 class="ptitle">FLIGHT DATA</h2>
-      <div class="ro"><span class="l">ALTITUDE</span><span class="v big" id="rAlt">0.0<small>M</small></span></div>
+      <h2 class="ptitle">飛行データ // FLIGHT DATA</h2>
+      <div class="ro"><span class="l">ALTITUDE</span><span class="v" id="rAlt">0.0<small>M</small></span></div>
       <div class="ro"><span class="l">GROUND SPEED</span><span class="v" id="rSpd">0.0<small>M/S</small></span></div>
       <div class="ro"><span class="l">VERTICAL SPEED</span><span class="v" id="rVz">0.0<small>M/S</small></span></div>
       <div class="ro"><span class="l">HEADING</span><span class="v" id="rHdg">000<small>°</small></span></div>
       <div class="ro"><span class="l">RANGE</span><span class="v" id="rRng">0<small>M</small></span></div>
     </div>
     <div class="panel">
-      <h2 class="ptitle">POWER · GPS</h2>
+      <h2 class="ptitle">電源・測位 // POWER · GPS</h2>
       <div class="ro"><span class="l">BATTERY</span><span class="v" id="rBatt">100.0<small>%</small></span></div>
       <div class="ro"><span class="l">VOLTAGE</span><span class="v" id="rVolt">25.20<small>V</small></span></div>
       <div class="battbar"><i id="battFill"></i></div>
-      <div style="height:7px"></div>
+      <div style="height:6px"></div>
       <div class="gpsline"><span>LAT</span><b id="rLat">--</b></div>
       <div class="gpsline"><span>LON</span><b id="rLon">--</b></div>
       <div class="gpsline"><span>SATS / HDOP</span><b><span id="rSats">--</span> / <span id="rHdop">--</span></b></div>
     </div>
     <div class="panel">
-      <h2 class="ptitle">GROUND TRACK · RINGS 100 M</h2>
-      <canvas id="map"></canvas>
+      <h2 class="ptitle">姿勢 // ATTITUDE</h2>
+      <canvas id="att"></canvas>
+      <div class="numrow">
+        <div><div class="l">ROLL</div><div class="v" id="rRoll">0.0°</div></div>
+        <div><div class="l">PITCH</div><div class="v" id="rPitch">0.0°</div></div>
+        <div><div class="l">YAW</div><div class="v" id="rYaw">000°</div></div>
+      </div>
     </div>
     <div class="panel">
-      <h2 class="ptitle">TELEMETRY · LAST 120 S</h2>
+      <h2 class="ptitle">追尾アンテナ // ANTENNA</h2>
+      <canvas id="polar"></canvas>
+      <div class="numrow">
+        <div><div class="l">AZ</div><div class="v" id="rAz">000.0°</div></div>
+        <div><div class="l">EL</div><div class="v" id="rEl">0.0°</div></div>
+        <div><div class="l">RSSI</div><div class="v" id="rRssi">--</div></div>
+        <div><div class="l">LQ</div><div class="v" id="rLq">--%</div></div>
+      </div>
+    </div>
+    <div class="panel">
+      <h2 class="ptitle">テレメトリ // LAST 120 S</h2>
       <div class="chart">
         <div class="ctitle">ALTITUDE (M)</div>
         <canvas id="chAlt"></canvas><div class="tooltip" id="ttAlt"></div>
@@ -216,68 +267,12 @@
       </div>
     </div>
   </aside>
-
-  <!-- ============ RIGHT ============ -->
-  <aside id="rcol" class="colwrap">
-    <div class="panel">
-      <h2 class="ptitle">ATTITUDE</h2>
-      <canvas id="att"></canvas>
-      <div class="numrow">
-        <div><div class="l">ROLL</div><div class="v" id="rRoll">0.0°</div></div>
-        <div><div class="l">PITCH</div><div class="v" id="rPitch">0.0°</div></div>
-        <div><div class="l">YAW</div><div class="v" id="rYaw">000°</div></div>
-      </div>
-    </div>
-    <div class="panel">
-      <h2 class="ptitle">TRACKING ANTENNA</h2>
-      <canvas id="polar"></canvas>
-      <div class="numrow">
-        <div><div class="l">AZ</div><div class="v" id="rAz">000.0°</div></div>
-        <div><div class="l">EL</div><div class="v" id="rEl">0.0°</div></div>
-        <div><div class="l">RSSI</div><div class="v" id="rRssi">--</div></div>
-        <div><div class="l">LQ</div><div class="v" id="rLq">--%</div></div>
-      </div>
-      <div class="rssibar"><i id="rssiFill"></i></div>
-    </div>
-    <div class="panel">
-      <h2 class="ptitle">COMMAND</h2>
-      <div class="cmds">
-        <button id="cArm">ARM</button>
-        <button id="cLaunch">LAUNCH</button>
-        <button id="cHold">HOLD</button>
-        <button id="cResume">RESUME</button>
-        <button id="cRtl" class="danger">RTL</button>
-        <button id="cLand" class="danger">LAND</button>
-      </div>
-    </div>
-    <div class="panel logpanel">
-      <h2 class="ptitle">EVENT LOG</h2>
-      <div id="log" aria-live="polite"></div>
-    </div>
-  </aside>
-
-  <!-- ============ BOTTOM BAR ============ -->
-  <footer id="bar">
-    <div class="gcluster">
-      <canvas id="gSpd" role="img" aria-label="speed gauge"></canvas>
-      <canvas id="gAlt" role="img" aria-label="altitude gauge"></canvas>
-    </div>
-    <div class="clockblock">
-      <div class="mission">IDEA-1 · DEMO FLIGHT</div>
-      <div id="tclock">T- 00:00:10</div>
-      <div id="phaseName">PAD</div>
-    </div>
-    <div id="timeline" aria-label="mission timeline">
-      <div class="tl-line"><i id="tlFill"></i></div>
-      <div id="tlNodes"></div>
-    </div>
-  </footer>
 </div>
 
 <script>
 "use strict";
 /* ================================================================
-   DOLUCK GCS v2 — SpaceX webcast style drone ground control
+   DOLUCK GCS v3 — Ghost in the Shell style HUD
    データ源: ws://127.0.0.1:8765 (bridge.py) → 失敗時は内蔵シミュレーション
    ================================================================ */
 const $ = s => document.querySelector(s);
@@ -293,19 +288,21 @@ const T={t:-10,phase:"PAD",armed:false,x:0,y:0,z:0,vz:0,spd:0,hdg:0,roll:0,pitch
   batt:100,volt:25.2,sats:17,hdop:0.6,az:0,el:0,rssi:-40,lq:100,rng:0,live:false,pkt:0,
   lat:HOME.lat,lon:HOME.lon};
 
-/* ---------------- audio (default off, user toggles) ---------------- */
+const PHASE_JP={PAD:"待機",ASCENT:"上昇",CRUISE:"巡航",HOLD:"保持",RTL:"帰投",LANDING:"着陸",LANDED:"完了"};
+
+/* ---------------- audio ---------------- */
 let AC=null, sndOn=false;
 const sndBtn=$("#sndBtn");
 sndBtn.addEventListener("click",()=>{
   sndOn=!sndOn;
   if(sndOn&&!AC){ try{ AC=new (window.AudioContext||window.webkitAudioContext)(); }catch(e){ sndOn=false; } }
   if(AC&&AC.state==="suspended") AC.resume();
-  sndBtn.textContent=sndOn?"SOUND ON":"SOUND OFF";
-  sndBtn.className=sndOn?"on":""; sndBtn.setAttribute("aria-pressed",sndOn);
+  sndBtn.textContent=sndOn?"音声 ON":"音声 OFF";
+  sndBtn.classList.toggle("on",sndOn); sndBtn.setAttribute("aria-pressed",sndOn);
 });
 function beep(f=740,d=0.12,vol=0.18){
   if(!sndOn||!AC) return;
-  const o=AC.createOscillator(), g=AC.createGain();
+  const o=AC.createOscillator(),g=AC.createGain();
   o.frequency.value=f; o.type="sine"; o.connect(g); g.connect(AC.destination);
   const t=AC.currentTime;
   g.gain.setValueAtTime(0,t); g.gain.linearRampToValueAtTime(vol,t+0.01);
@@ -314,7 +311,7 @@ function beep(f=740,d=0.12,vol=0.18){
 }
 function roar(){
   if(!sndOn||!AC) return;
-  const len=AC.sampleRate*3, buf=AC.createBuffer(1,len,AC.sampleRate), ch=buf.getChannelData(0);
+  const len=AC.sampleRate*3,buf=AC.createBuffer(1,len,AC.sampleRate),ch=buf.getChannelData(0);
   for(let i=0;i<len;i++) ch[i]=Math.random()*2-1;
   const src=AC.createBufferSource(); src.buffer=buf;
   const f=AC.createBiquadFilter(); f.type="lowpass"; f.frequency.value=240;
@@ -325,20 +322,32 @@ function roar(){
   src.start(t);
 }
 
+/* ---------------- detail toggle ---------------- */
+const detBtn=$("#detBtn");
+function setDetail(on){
+  $("#stage").classList.toggle("detail",on);
+  detBtn.classList.toggle("on",on); detBtn.setAttribute("aria-pressed",on);
+}
+detBtn.addEventListener("click",()=>setDetail(!$("#stage").classList.contains("detail")));
+if(/[?&]detail/.test(location.search)) setDetail(true);
+
 /* ---------------- callout ---------------- */
 const calloutEl=$("#callout"); let calloutTimer=null;
-function showCallout(text){
-  calloutEl.textContent=text; calloutEl.classList.add("show");
+function showCallout(en,jp=""){
+  $("#coEn").textContent=en; $("#coJp").textContent=jp;
+  calloutEl.classList.remove("show");
+  void calloutEl.offsetWidth;               // アニメ再トリガー
+  calloutEl.classList.add("show");
   clearTimeout(calloutTimer);
-  calloutTimer=setTimeout(()=>calloutEl.classList.remove("show"),2600);
+  calloutTimer=setTimeout(()=>calloutEl.classList.remove("show"),2500);
 }
 function shake(ms=2200){
   const st=$("#stage"); st.classList.add("shake");
   setTimeout(()=>st.classList.remove("shake"),ms);
 }
 
-/* ---------------- event log ---------------- */
-const logEl=$("#log");
+/* ---------------- event log (stream) ---------------- */
+const logEl=$("#logstream");
 function tstamp(t){
   const s=Math.abs(t),h=String(Math.floor(s/3600)).padStart(2,"0"),
         m=String(Math.floor(s%3600/60)).padStart(2,"0"),ss=String(Math.floor(s%60)).padStart(2,"0");
@@ -348,7 +357,7 @@ function logEv(msg,cls=""){
   const d=document.createElement("div");
   d.innerHTML=`<span class="ts">${tstamp(T.t)}</span><span class="ev ${cls}">${msg}</span>`;
   logEl.prepend(d);
-  while(logEl.children.length>60) logEl.lastChild.remove();
+  while(logEl.children.length>5) logEl.lastChild.remove();
 }
 
 /* ================================================================
@@ -379,14 +388,14 @@ const sim={
       if(T.t>=-3) this.arm();
       if(T.t>=0){
         this.counting=false; T.phase="ASCENT";
-        logEv("LIFTOFF","hi"); showCallout("LIFTOFF"); beep(880,.5); roar(); shake();
+        logEv("LIFTOFF","hi"); showCallout("LIFTOFF","リフトオフ"); beep(880,.5); roar(); shake();
       }
     }
     const p=T.phase;
     let tgtVz=0,tgtSpd=0,steer=null;
     if(p==="ASCENT"){ tgtVz=4;
       if(T.z>=CRUISE_ALT){ T.phase="CRUISE";
-        logEv(`CRUISE ALT ${CRUISE_ALT} M - WAYPOINT CIRCUIT START`,"hi"); showCallout("CRUISE"); }
+        logEv(`CRUISE ALT ${CRUISE_ALT} M - CIRCUIT START`,"hi"); showCallout("CRUISE","巡航高度到達"); }
     }
     else if(p==="CRUISE"){
       tgtSpd=15; tgtVz=clamp((CRUISE_ALT-T.z)*0.5,-2,2);
@@ -396,8 +405,8 @@ const sim={
         logEv(`WAYPOINT ${this.wpi+1} ACQUIRED`,"ok");
         this.wpi=(this.wpi+1)%WPTS.length;
         if(this.wpi===0){ this.lap++;
-          if(this.lap>=LAPS){ T.phase="RTL"; logEv("CIRCUIT COMPLETE - RETURN TO LAUNCH","hi"); showCallout("RETURN"); }
-          else { logEv(`LAP ${this.lap} COMPLETE`,"ok"); showCallout(`LAP ${this.lap}`); }
+          if(this.lap>=LAPS){ T.phase="RTL"; logEv("CIRCUIT COMPLETE - RTL","hi"); showCallout("RETURN","帰投開始"); }
+          else { logEv(`LAP ${this.lap} COMPLETE`,"ok"); showCallout(`LAP ${this.lap}`,`周回 ${this.lap} 完了`); }
         }
       }
     }
@@ -405,7 +414,7 @@ const sim={
     else if(p==="RTL"){
       tgtSpd=16; tgtVz=clamp((CRUISE_ALT-T.z)*0.5,-2,2);
       steer=Math.atan2(-T.x,-T.y)/D2R;
-      if(Math.hypot(T.x,T.y)<12){ T.phase="LANDING"; logEv("OVER PAD - LANDING","hi"); showCallout("LANDING"); }
+      if(Math.hypot(T.x,T.y)<12){ T.phase="LANDING"; logEv("OVER PAD - LANDING","hi"); showCallout("LANDING","着陸シーケンス"); }
     }
     else if(p==="LANDING"){
       tgtSpd=0; tgtVz=T.z>12?-2.2:-0.8;
@@ -413,7 +422,7 @@ const sim={
         T.z=0;T.vz=0;T.phase="LANDED";T.armed=false;
         if(!this.landAnnounced){ this.landAnnounced=true;
           logEv("TOUCHDOWN - VEHICLE SAFE","hi"); logEv("VEHICLE DISARMED","warn");
-          showCallout("TOUCHDOWN"); beep(520,.25); setTimeout(()=>beep(520,.25),320); shake(700); }
+          showCallout("TOUCHDOWN","着陸完了"); beep(520,.25); setTimeout(()=>beep(520,.25),320); shake(700); }
       }
     }
     if(p!=="LANDING") this.landAnnounced=false;
@@ -458,10 +467,10 @@ function sendCmd(name){
   switch(name){
     case "ARM": sim.arm(); break;
     case "LAUNCH": sim.launch(); break;
-    case "HOLD": sim.holdAlt=T.z; T.phase="HOLD"; logEv("POSITION HOLD","ok"); showCallout("HOLD"); break;
+    case "HOLD": sim.holdAlt=T.z; T.phase="HOLD"; logEv("POSITION HOLD","ok"); showCallout("HOLD","位置保持"); break;
     case "RESUME": T.phase="CRUISE"; logEv("MISSION RESUMED","ok"); break;
-    case "RTL": T.phase="RTL"; logEv("RETURN TO LAUNCH","warn"); showCallout("RETURN"); break;
-    case "LAND": T.phase="LANDING"; logEv("LANDING AT CURRENT POSITION","warn"); showCallout("LANDING"); break;
+    case "RTL": T.phase="RTL"; logEv("RETURN TO LAUNCH","warn"); showCallout("RETURN","帰投開始"); break;
+    case "LAND": T.phase="LANDING"; logEv("LANDING AT CURRENT POSITION","warn"); showCallout("LANDING","着陸シーケンス"); break;
   }
 }
 const BTN={ARM:$("#cArm"),LAUNCH:$("#cLaunch"),HOLD:$("#cHold"),RESUME:$("#cResume"),RTL:$("#cRtl"),LAND:$("#cLand")};
@@ -502,15 +511,25 @@ function fitCanvas(cv){
   return {g,w:r.width,h:r.height};
 }
 const css=n=>getComputedStyle(document.documentElement).getPropertyValue(n).trim();
-const C={ink:"#EAF0F6",sec:"rgba(234,240,246,.62)",mut:"rgba(234,240,246,.38)",
-  hair:"rgba(255,255,255,.12)",hair2:"rgba(255,255,255,.06)",
-  cy:"#2F9EC2",cyb:"#7FD4EF",am:"#B08A3E",amb:"#E4C079",
-  ok:"#6FBF7F",warn:"#D9A741",crit:"#D96B6B",bg:"#04070C"};
-const DIN=css("--din"), MONO="10px "+css("--mono");
+const C={ink:"#E9E2D6",sec:"rgba(233,226,214,.62)",mut:"rgba(233,226,214,.34)",
+  hair:"rgba(232,166,74,.2)",hair2:"rgba(232,166,74,.1)",
+  amber:"#E8A64A",amber2:"rgba(232,166,74,.55)",amber3:"rgba(232,166,74,.22)",
+  teal:"#1CA88E",tealb:"#5BCDB6",chA:"#1CA88E",chS:"#B07E3B",
+  red:"#E86B6B",warn:"#D9A741",bg:"#05070A"};
+const DIN=css("--din"), JPF=css("--jp");
 
-/* ---------- onboard camera view (full-screen backdrop) ---------- */
-const stars=Array.from({length:170},()=>({a:Math.random(),y:Math.random(),s:Math.random()*1.4+0.4,tw:Math.random()*TAU}));
+/* ---------- history + trails ---------- */
+const HIST=[]; const HMAX=600;
+setInterval(()=>{HIST.push({t:T.t,alt:T.z,spd:T.spd}); if(HIST.length>HMAX)HIST.shift();},200);
+const trail=[];
+setInterval(()=>{if(T.z>0.2){trail.push({x:T.x,y:T.y}); if(trail.length>900)trail.shift();}},150);
+const skytrail=[];
+setInterval(()=>{if(T.z>0.5){skytrail.push({az:T.az,el:T.el}); if(skytrail.length>240)skytrail.shift();}},250);
+
+/* ---------- onboard view backdrop ---------- */
+const stars=Array.from({length:150},()=>({a:Math.random(),y:Math.random(),s:Math.random()*1.3+0.4,tw:Math.random()*TAU}));
 let travel=0,lastVT=performance.now();
+const DPOS={x:0,y:0,s:1};
 function drawView(){
   const f=fitCanvas($("#view")); if(!f)return; const {g,w,h}=f;
   const now=performance.now(),dt=Math.min(0.1,(now-lastVT)/1000); lastVT=now;
@@ -521,53 +540,53 @@ function drawView(){
   g.clearRect(0,0,w,h);
   g.save();
   g.translate(w/2,cy0); g.rotate(-roll*D2R); g.translate(-w/2,-cy0);
-  const ov=Math.max(w,h)*0.35; // 回転時の余白
+  const ov=Math.max(w,h)*0.35;
   // --- sky
   const sky=g.createLinearGradient(0,-ov,0,hy);
-  sky.addColorStop(0,`rgb(2,4,${9-Math.round(alt01*4)})`);
-  sky.addColorStop(0.72,`rgb(${7+Math.round(6*(1-alt01))},${14+Math.round(11*(1-alt01))},${22+Math.round(13*(1-alt01))})`);
-  sky.addColorStop(1,`rgb(${14+Math.round(14*(1-alt01))},${26+Math.round(16*(1-alt01))},${36+Math.round(16*(1-alt01))})`);
+  sky.addColorStop(0,"rgb(2,3,6)");
+  sky.addColorStop(0.75,`rgb(${8+Math.round(5*(1-alt01))},${10+Math.round(7*(1-alt01))},${12+Math.round(8*(1-alt01))})`);
+  sky.addColorStop(1,`rgb(${20+Math.round(10*(1-alt01))},${18+Math.round(9*(1-alt01))},${13+Math.round(6*(1-alt01))})`);
   g.fillStyle=sky; g.fillRect(-ov,-ov,w+ov*2,hy+ov);
-  // --- stars (高度が上がるほど濃く)
-  const sAlpha=0.18+0.8*alt01, t=now/1000;
+  // --- stars
+  const sAlpha=0.18+0.8*alt01,t=now/1000;
   for(const st of stars){
     const sx=(((st.a*2.2-T.hdg/360)%1)+1)%1*(w+ov*2)-ov;
     const sy=-ov+st.y*(hy+ov)*0.92;
     const tw=0.55+0.45*Math.sin(t*1.7+st.tw);
     g.globalAlpha=sAlpha*tw*(1-st.y*0.55);
-    g.fillStyle="#cfe4f2"; g.fillRect(sx,sy,st.s,st.s);
+    g.fillStyle="#d8e2e4"; g.fillRect(sx,sy,st.s,st.s);
   }
   g.globalAlpha=1;
-  // --- horizon glow
-  const hgl=g.createLinearGradient(0,hy-26,0,hy);
-  hgl.addColorStop(0,"rgba(127,212,239,0)"); hgl.addColorStop(1,"rgba(127,212,239,.10)");
-  g.fillStyle=hgl; g.fillRect(-ov,hy-26,w+ov*2,26);
-  g.fillStyle="rgba(160,220,242,.28)"; g.fillRect(-ov,hy-1,w+ov*2,2);
+  // --- horizon
+  const hgl=g.createLinearGradient(0,hy-24,0,hy);
+  hgl.addColorStop(0,"rgba(232,166,74,0)"); hgl.addColorStop(1,"rgba(232,166,74,.12)");
+  g.fillStyle=hgl; g.fillRect(-ov,hy-24,w+ov*2,24);
+  g.fillStyle="rgba(232,166,74,.4)"; g.fillRect(-ov,hy-1,w+ov*2,1.6);
   // --- ground
   const gnd=g.createLinearGradient(0,hy,0,h+ov);
-  gnd.addColorStop(0,"rgb(14,20,24)"); gnd.addColorStop(0.25,"rgb(9,13,16)"); gnd.addColorStop(1,"rgb(3,5,7)");
+  gnd.addColorStop(0,"rgb(15,12,7)"); gnd.addColorStop(0.3,"rgb(9,8,5)"); gnd.addColorStop(1,"rgb(3,3,2)");
   g.fillStyle=gnd; g.fillRect(-ov,hy,w+ov*2,h-hy+ov*2);
-  // --- perspective grid (速度でスクロール、高度で縮小)
+  // --- perspective wireframe (amber)
   const gh=h-hy+ov, step=26/(1+T.z/45);
-  g.strokeStyle="rgba(127,212,239,.24)"; g.lineWidth=1;
+  g.strokeStyle="rgba(216,150,60,.28)"; g.lineWidth=1;
   const frac=(travel/step)%1, ROWS=22;
   for(let k=1;k<=ROWS;k++){
     const p=(k-frac)/ROWS, y=hy+gh*p*p;
     if(y>h+ov) continue;
-    g.globalAlpha=clamp(p*1.5,0.08,0.8);
+    g.globalAlpha=clamp(p*1.5,0.08,0.75);
     g.beginPath(); g.moveTo(-ov,y); g.lineTo(w+ov,y); g.stroke();
   }
   const VXN=16;
   for(let i=-VXN;i<=VXN;i++){
     const xb=w/2+i*(w*0.11);
-    g.globalAlpha=clamp(0.6-Math.abs(i)*0.032,0.07,0.6);
+    g.globalAlpha=clamp(0.55-Math.abs(i)*0.03,0.06,0.55);
     g.beginPath(); g.moveTo(w/2+(xb-w/2)*0.04,hy); g.lineTo(xb,h+ov); g.stroke();
   }
   g.globalAlpha=1;
-  // --- clouds (高度が上がると眼下に流れる)
+  // --- clouds
   if(T.z>40){
-    const ca=clamp((T.z-40)/60,0,1)*0.10;
-    g.fillStyle="#b8ccd8";
+    const ca=clamp((T.z-40)/60,0,1)*0.08;
+    g.fillStyle="#c8bfae";
     for(let i=0;i<4;i++){
       const cw=w*(0.16+i*0.05);
       const cxp=((i*0.31+travel/(900+i*260))%1.3-0.15)*w;
@@ -579,28 +598,28 @@ function drawView(){
   }
   g.restore();
   drawDrone(g,w,h,now/1000);
+  drawReticle(g,w,h,now/1000);
 }
 
-/* ---------- tracking-camera drone silhouette ---------- */
+/* ---------- drone silhouette ---------- */
 function drawDrone(g,w,h,t){
   const air=clamp(T.z/30,0,1);
-  const cx=w/2, cyG=h*0.665, cyA=h*0.40;
-  const cy=cyG+(cyA-cyG)*air + (air>0.9?Math.sin(t*2.1)*4:0);
-  const s=(Math.min(w,h)/1000)*(1-air*0.28);   // 上空では少し小さく
+  const cx=w/2, cyG=h*0.665, cyA=h*0.42;
+  const cy=cyG+(cyA-cyG)*air+(air>0.9?Math.sin(t*2.1)*4:0);
+  const s=(Math.min(w,h)/1000)*(1-air*0.28);
+  DPOS.x=cx; DPOS.y=cy; DPOS.s=s;
   g.save();
   g.translate(cx,cy); g.rotate(T.roll*0.7*D2R); g.scale(s,s);
   const spin=T.armed||T.z>0.1;
-  // arms
   g.strokeStyle="#050708"; g.lineWidth=9; g.lineCap="round";
   for(const [ax,ay] of [[-70,-34],[70,-34],[-70,26],[70,26]]){
     g.beginPath(); g.moveTo(0,0); g.lineTo(ax,ay); g.stroke();
   }
-  // props (回転中は円盤化)
   for(const [ax,ay] of [[-70,-34],[70,-34],[-70,26],[70,26]]){
     if(spin){
-      g.fillStyle="rgba(190,215,230,.10)";
+      g.fillStyle="rgba(210,195,170,.09)";
       g.beginPath(); g.ellipse(ax,ay,42,12,0,0,TAU); g.fill();
-      g.strokeStyle="rgba(190,215,230,.30)"; g.lineWidth=1.5;
+      g.strokeStyle="rgba(210,195,170,.28)"; g.lineWidth=1.5;
       const ph=t*26+ax*0.1+ay;
       g.beginPath(); g.ellipse(ax,ay,42,12,0,ph%TAU,(ph+1.1)%TAU); g.stroke();
     } else {
@@ -610,26 +629,20 @@ function drawDrone(g,w,h,t){
     g.fillStyle="#070a0d";
     g.beginPath(); g.ellipse(ax,ay,9,7,0,0,TAU); g.fill();
   }
-  // body
   g.fillStyle="#080b0f";
   g.beginPath(); g.ellipse(0,-2,34,20,0,0,TAU); g.fill();
   g.fillStyle="#0d1216";
   g.beginPath(); g.ellipse(0,-8,20,10,0,0,TAU); g.fill();
-  // landing legs (接地時のみ)
   if(air<0.5){
     g.strokeStyle="#050708"; g.lineWidth=5; g.globalAlpha=1-air*2;
     g.beginPath(); g.moveTo(-20,10); g.lineTo(-28,34); g.moveTo(20,10); g.lineTo(28,34); g.stroke();
     g.globalAlpha=1;
   }
-  // nav lights: 左=赤 右=緑, 白ストロボ1Hzダブルフラッシュ
-  const bl=t%1;
-  const strobe=(bl<0.05||((bl>0.12)&&bl<0.17))?1:0;
+  const bl=t%1, strobe=(bl<0.05||((bl>0.12)&&bl<0.17))?1:0;
   function led(x,y,color,rad,on){
     if(!on) return;
-    g.fillStyle=color;
-    g.shadowColor=color; g.shadowBlur=14;
-    g.beginPath(); g.arc(x,y,rad,0,TAU); g.fill();
-    g.shadowBlur=0;
+    g.fillStyle=color; g.shadowColor=color; g.shadowBlur=14;
+    g.beginPath(); g.arc(x,y,rad,0,TAU); g.fill(); g.shadowBlur=0;
   }
   led(-70,-34,"#ff4444",3.4,true);
   led(70,-34,"#44ff77",3.4,true);
@@ -637,123 +650,123 @@ function drawDrone(g,w,h,t){
   g.restore();
 }
 
-/* ---------- history + trails ---------- */
-const HIST=[]; const HMAX=600;
-setInterval(()=>{HIST.push({t:T.t,alt:T.z,spd:T.spd}); if(HIST.length>HMAX)HIST.shift();},200);
-const trail=[];
-setInterval(()=>{if(T.z>0.2){trail.push({x:T.x,y:T.y}); if(trail.length>900)trail.shift();}},150);
-const skytrail=[];
-setInterval(()=>{if(T.z>0.5){skytrail.push({az:T.az,el:T.el}); if(skytrail.length>240)skytrail.shift();}},250);
-
-/* ---------- ground-track map ---------- */
-function drawMap(){
-  const f=fitCanvas($("#map")); if(!f)return; const {g,w,h}=f;
-  g.clearRect(0,0,w,h);
-  const scale=Math.min(w,h)/760;
-  const X=x=>w/2+x*scale, Y=y=>h/2-y*scale;
-  g.strokeStyle=C.hair2; g.lineWidth=1;
-  for(let gx=-300;gx<=300;gx+=100){g.beginPath();g.moveTo(X(gx),0);g.lineTo(X(gx),h);g.stroke();
-    g.beginPath();g.moveTo(0,Y(gx));g.lineTo(w,Y(gx));g.stroke();}
-  g.strokeStyle=C.hair;
-  for(let r=100;r<=300;r+=100){g.beginPath();g.arc(X(0),Y(0),r*scale,0,TAU);g.stroke();}
-  g.strokeStyle=C.mut; g.setLineDash([3,4]); g.beginPath();
-  WPTS.forEach((p,i)=>i?g.lineTo(X(p.x),Y(p.y)):g.moveTo(X(p.x),Y(p.y)));
-  g.closePath(); g.stroke(); g.setLineDash([]);
-  WPTS.forEach((p,i)=>{
-    g.strokeStyle=(sim.on&&T.phase==="CRUISE"&&i===sim.wpi)?C.amb:C.mut;
-    g.strokeRect(X(p.x)-2.5,Y(p.y)-2.5,5,5);
-  });
-  if(trail.length>1){
-    g.strokeStyle=C.cy; g.lineWidth=1.6; g.globalAlpha=.85; g.beginPath();
-    trail.forEach((p,i)=>i?g.lineTo(X(p.x),Y(p.y)):g.moveTo(X(p.x),Y(p.y)));
-    g.stroke(); g.globalAlpha=1;
+/* ---------- GITS target reticle ---------- */
+function drawReticle(g,w,h,t){
+  const {x,y,s}=DPOS;
+  const R=clamp(150*s,86,150);
+  g.save();
+  g.translate(x,y);
+  // 外リング(回転ダッシュ)
+  g.strokeStyle=C.amber2; g.lineWidth=1;
+  g.setLineDash([3,9]); g.lineDashOffset=-t*26;
+  g.beginPath(); g.arc(0,0,R,0,TAU); g.stroke();
+  g.setLineDash([]);
+  // 内リング
+  g.strokeStyle=C.amber3;
+  g.beginPath(); g.arc(0,0,R-7,0,TAU); g.stroke();
+  // コーナーブラケット
+  g.strokeStyle=C.amber; g.lineWidth=1.4;
+  const B=R+14, L=13;
+  for(const [sx,sy] of [[1,1],[1,-1],[-1,1],[-1,-1]]){
+    g.beginPath();
+    g.moveTo(sx*B-sx*L, sy*B); g.lineTo(sx*B, sy*B); g.lineTo(sx*B, sy*B-sy*L);
+    g.stroke();
   }
-  g.fillStyle=C.ink; g.beginPath(); g.arc(X(0),Y(0),3,0,TAU); g.fill();
-  g.strokeStyle=C.amb; g.lineWidth=1; g.globalAlpha=.7;
-  const bz=T.az*D2R,bl=Math.min(T.rng,370)*scale;
-  g.beginPath(); g.moveTo(X(0),Y(0)); g.lineTo(X(0)+Math.sin(bz)*bl,Y(0)-Math.cos(bz)*bl); g.stroke();
+  // 速度アーク(左) / 高度アーク(右)
+  const arc=(a0,a1,fr,color,label,val)=>{
+    g.lineWidth=2.2; g.strokeStyle="rgba(233,226,214,.14)";
+    g.beginPath(); g.arc(0,0,R+7,a0,a1); g.stroke();
+    if(fr>0.01){ g.strokeStyle=color;
+      g.beginPath(); g.arc(0,0,R+7,a0,a0+(a1-a0)*clamp(fr,0,1)); g.stroke(); }
+    const am=(a0+a1)/2, lx=Math.cos(am)*(R+30), ly=Math.sin(am)*(R+30);
+    g.fillStyle=C.sec; g.font="11px "+DIN; g.textAlign="center";
+    g.fillText(val, lx, ly+1);
+    g.fillStyle=C.mut; g.font="7px "+DIN;
+    g.fillText(label, lx, ly+12);
+  };
+  arc(Math.PI*0.72,Math.PI*1.28,T.spd/20,C.amber,"GS M/S",T.spd.toFixed(1));   // 左
+  arc(-Math.PI*0.28,Math.PI*0.28,T.z/160,C.tealb,"ALT M",T.z.toFixed(0));      // 右
+  // ターゲットタグ + リーダーライン
+  const grounded=(T.phase==="PAD"||T.phase==="LANDED")&&T.z<0.3;
+  const a=-Math.PI*0.38;
+  const p1x=Math.cos(a)*(R+4), p1y=Math.sin(a)*(R+4);
+  const p2x=p1x+44, p2y=p1y-30, p3x=p2x+188;
+  g.strokeStyle=C.amber2; g.lineWidth=1;
+  g.beginPath(); g.moveTo(p1x,p1y); g.lineTo(p2x,p2y); g.lineTo(p3x,p2y); g.stroke();
+  g.fillStyle=C.amber; g.beginPath(); g.arc(p1x,p1y,1.8,0,TAU); g.fill();
+  g.font="10px "+css("--mono"); g.textAlign="left"; g.fillStyle=C.ink;
+  const tag=grounded
+    ? "UAV-01 // 待機中 STANDBY"
+    : `UAV-01 // ALT ${T.z.toFixed(1)}M // GS ${T.spd.toFixed(1)}M/S`;
+  g.fillText(tag, p2x+6, p2y-6);
+  const blink=0.45+0.4*Math.sin(t*3.2);
+  g.globalAlpha=blink;
+  g.fillStyle=C.amber2; g.font="8.5px "+css("--mono");
+  g.fillText(grounded?"LINK IDLE // 接続待機":`TRACKING LOCKED // 追尾同期  BAT ${T.batt.toFixed(0)}%`, p2x+6, p2y+11);
   g.globalAlpha=1;
-  const dx=X(T.x),dy=Y(T.y),a=T.hdg*D2R;
-  g.save(); g.translate(dx,dy); g.rotate(a);
-  g.fillStyle=C.cyb; g.beginPath();
-  g.moveTo(0,-7.5); g.lineTo(5,6); g.lineTo(0,3); g.lineTo(-5,6); g.closePath(); g.fill();
   g.restore();
 }
 
-/* ---------- strip charts ---------- */
-function makeChart(cvSel,ttSel,key,color,unit){
-  const cv=$(cvSel),tt=$(ttSel); let mouseX=null;
-  cv.addEventListener("mousemove",e=>{mouseX=e.offsetX;});
-  cv.addEventListener("mouseleave",()=>{mouseX=null;tt.style.display="none";});
-  return function draw(){
-    const f=fitCanvas(cv); if(!f)return; const {g,w,h}=f;
-    g.clearRect(0,0,w,h);
-    if(HIST.length<2)return;
-    const padL=26,padB=12,padT=4,pw=w-padL-4,ph=h-padT-padB;
-    const t1=HIST[HIST.length-1].t,t0=t1-120;
-    let vmax=10; for(const s of HIST) if(s[key]>vmax)vmax=s[key];
-    vmax=Math.ceil(vmax*1.15/10)*10;
-    const X=t=>padL+((t-t0)/120)*pw, Y=v=>padT+ph-(v/vmax)*ph;
-    g.strokeStyle=C.hair2; g.fillStyle=C.mut; g.font="8.5px "+css("--mono"); g.textAlign="right";
-    for(let i=0;i<=2;i++){const v=vmax*i/2,y=Y(v);
-      g.beginPath();g.moveTo(padL,y);g.lineTo(w-4,y);g.stroke();
-      g.fillText(String(Math.round(v)),padL-4,y+3);}
-    for(let dt=-120;dt<=0;dt+=60){const x=X(t1+dt);
-      g.textAlign=dt===0?"right":"center";
-      g.fillText(dt===0?"now":dt+"s",dt===0?w-4:x,h-2);}
-    const pts=HIST.filter(s=>s.t>=t0);
-    g.beginPath(); pts.forEach((s,i)=>{const x=X(s.t),y=Y(s[key]); i?g.lineTo(x,y):g.moveTo(x,y);});
-    g.strokeStyle=color; g.lineWidth=1.8; g.stroke();
-    g.lineTo(X(pts[pts.length-1].t),Y(0)); g.lineTo(X(pts[0].t),Y(0)); g.closePath();
-    g.globalAlpha=.13; g.fillStyle=color; g.fill(); g.globalAlpha=1;
-    const last=pts[pts.length-1],lx=X(last.t),ly=Y(last[key]);
-    g.fillStyle=color; g.beginPath(); g.arc(lx,ly,2.8,0,TAU); g.fill();
-    g.fillStyle=C.ink; g.textAlign="right"; g.font="9.5px "+css("--mono");
-    g.fillText(last[key].toFixed(1),lx-7,ly-5);
-    if(mouseX!==null&&mouseX>padL){
-      const tm=t0+((mouseX-padL)/pw)*120;
-      let best=pts[0]; for(const s of pts) if(Math.abs(s.t-tm)<Math.abs(best.t-tm))best=s;
-      const bx=X(best.t),by=Y(best[key]);
-      g.strokeStyle=C.mut; g.setLineDash([3,3]);
-      g.beginPath(); g.moveTo(bx,padT); g.lineTo(bx,padT+ph); g.stroke(); g.setLineDash([]);
-      g.fillStyle=color; g.beginPath(); g.arc(bx,by,3.5,0,TAU); g.fill();
-      g.strokeStyle=C.bg; g.lineWidth=2; g.stroke();
-      tt.style.display="block";
-      tt.style.left=(cv.offsetLeft+Math.min(bx+8,w-115))+"px";
-      tt.style.top=(cv.offsetTop+by-9)+"px";
-      tt.textContent=`${tstamp(best.t)}  ${best[key].toFixed(1)} ${unit}`;
-    } else tt.style.display="none";
-  };
-}
-const drawAlt=makeChart("#chAlt","#ttAlt","alt",C.cy,"m");
-const drawSpd=makeChart("#chSpd","#ttSpd","spd",C.am,"m/s");
-
-/* ---------- SpaceX-style ring gauges ---------- */
-function drawGauge(sel,val,max,label,unit){
-  const f=fitCanvas($(sel)); if(!f)return; const {g,w,h}=f;
+/* ---------- circular radar (ground track + antenna) ---------- */
+function drawRadar(){
+  const f=fitCanvas($("#radar")); if(!f)return; const {g,w,h}=f;
   g.clearRect(0,0,w,h);
-  const cx=w/2,cy=h/2-4,R=Math.min(w,h)/2-8;
-  const a0=Math.PI*0.75,a1=Math.PI*2.25;
-  g.lineWidth=2.5; g.lineCap="round";
-  g.strokeStyle="rgba(255,255,255,.16)";
-  g.beginPath(); g.arc(cx,cy,R,a0,a1); g.stroke();
-  const fr=clamp(val/max,0,1),ae=a0+(a1-a0)*fr;
-  if(fr>0.003){
-    g.strokeStyle="#fff"; g.beginPath(); g.arc(cx,cy,R,a0,ae); g.stroke();
-    g.fillStyle="#fff"; g.beginPath();
-    g.arc(cx+R*Math.cos(ae),cy+R*Math.sin(ae),3,0,TAU); g.fill();
+  const cx=w/2,cy=h/2,R=Math.min(w,h)/2-6;
+  const t=performance.now()/1000;
+  // 背景 + リング
+  g.fillStyle="rgba(5,8,9,.55)";
+  g.beginPath(); g.arc(cx,cy,R,0,TAU); g.fill();
+  g.strokeStyle=C.hair; g.lineWidth=1;
+  for(const rr of [R/3,R*2/3,R]){ g.beginPath(); g.arc(cx,cy,rr,0,TAU); g.stroke(); }
+  g.beginPath(); g.moveTo(cx-R,cy); g.lineTo(cx+R,cy); g.moveTo(cx,cy-R); g.lineTo(cx,cy+R); g.stroke();
+  g.fillStyle=C.mut; g.font="7px "+DIN; g.textAlign="center";
+  g.fillText("N",cx,cy-R+8);
+  // スイープ
+  const sa=(t*1.4)%TAU;
+  const grad=g.createConicGradient?g.createConicGradient(sa,cx,cy):null;
+  if(grad){
+    grad.addColorStop(0,"rgba(232,166,74,0)");
+    grad.addColorStop(0.8,"rgba(232,166,74,0)");
+    grad.addColorStop(1,"rgba(232,166,74,.26)");
+    g.fillStyle=grad;
+    g.beginPath(); g.moveTo(cx,cy); g.arc(cx,cy,R,0,TAU); g.fill();
   }
-  g.fillStyle=C.ink; g.textAlign="center";
-  g.font="400 30px "+DIN;
-  g.fillText(val.toFixed(0),cx,cy+9);
-  g.fillStyle=C.mut; g.font="9px "+DIN;
-  g.fillText(unit.toUpperCase(),cx,cy+23);
-  g.fillStyle=C.sec; g.font="9px "+DIN;
-  const prev=g.letterSpacing; g.letterSpacing="2px";
-  g.fillText(label,cx,h-2); g.letterSpacing=prev||"0px";
+  g.strokeStyle="rgba(232,166,74,.5)";
+  g.beginPath(); g.moveTo(cx,cy); g.lineTo(cx+Math.cos(sa)*R,cy+Math.sin(sa)*R); g.stroke();
+  // 座標系: 表示範囲±380m
+  const scale=R/380;
+  const X=x=>cx+x*scale, Y=y=>cy-y*scale;
+  g.save();
+  g.beginPath(); g.arc(cx,cy,R,0,TAU); g.clip();
+  // waypoints
+  g.strokeStyle="rgba(233,226,214,.28)"; g.setLineDash([2,4]); g.beginPath();
+  WPTS.forEach((p,i)=>i?g.lineTo(X(p.x),Y(p.y)):g.moveTo(X(p.x),Y(p.y)));
+  g.closePath(); g.stroke(); g.setLineDash([]);
+  WPTS.forEach((p,i)=>{
+    g.strokeStyle=(sim.on&&T.phase==="CRUISE"&&i===sim.wpi)?C.amber:"rgba(233,226,214,.3)";
+    g.strokeRect(X(p.x)-2,Y(p.y)-2,4,4);
+  });
+  // trail + drone
+  if(trail.length>1){
+    g.strokeStyle=C.tealb; g.lineWidth=1.3; g.globalAlpha=.8; g.beginPath();
+    trail.forEach((p,i)=>i?g.lineTo(X(p.x),Y(p.y)):g.moveTo(X(p.x),Y(p.y)));
+    g.stroke(); g.globalAlpha=1;
+  }
+  // アンテナビーム
+  g.strokeStyle="rgba(232,166,74,.55)"; g.lineWidth=1;
+  const bz=T.az*D2R,bl=Math.min(T.rng,370)*scale;
+  g.beginPath(); g.moveTo(cx,cy); g.lineTo(cx+Math.sin(bz)*bl,cy-Math.cos(bz)*bl); g.stroke();
+  const dx=X(T.x),dy=Y(T.y);
+  g.save(); g.translate(dx,dy); g.rotate(T.hdg*D2R);
+  g.fillStyle=C.tealb; g.beginPath();
+  g.moveTo(0,-6); g.lineTo(4,5); g.lineTo(0,2.5); g.lineTo(-4,5); g.closePath(); g.fill();
+  g.restore();
+  g.restore();
+  // GS 中心マーク
+  g.fillStyle=C.ink; g.beginPath(); g.arc(cx,cy,2,0,TAU); g.fill();
 }
 
-/* ---------- attitude indicator ---------- */
+/* ---------- detail: attitude ---------- */
 function drawAtt(){
   const f=fitCanvas($("#att")); if(!f)return; const {g,w,h}=f;
   g.clearRect(0,0,w,h);
@@ -762,8 +775,8 @@ function drawAtt(){
   g.beginPath(); g.arc(cx,cy,R,0,TAU); g.clip();
   g.translate(cx,cy); g.rotate(-T.roll*D2R);
   const off=T.pitch*(R/45);
-  g.fillStyle="#14202c"; g.fillRect(-R*2,-R*2,R*4,R*2+off);
-  g.fillStyle="#1a170f"; g.fillRect(-R*2,off,R*4,R*2);
+  g.fillStyle="#101a1c"; g.fillRect(-R*2,-R*2,R*4,R*2+off);
+  g.fillStyle="#1a140b"; g.fillRect(-R*2,off,R*4,R*2);
   g.strokeStyle=C.sec; g.lineWidth=1.5;
   g.beginPath(); g.moveTo(-R*2,off); g.lineTo(R*2,off); g.stroke();
   g.strokeStyle=C.mut; g.fillStyle=C.mut; g.font="8px "+css("--mono"); g.textAlign="center";
@@ -773,41 +786,89 @@ function drawAtt(){
     if(p%20===0) g.fillText(String(Math.abs(p)),wl/2+9,y+3);
   }
   g.restore();
-  g.strokeStyle=C.hair; g.lineWidth=2; g.beginPath(); g.arc(cx,cy,R,0,TAU); g.stroke();
-  g.strokeStyle=C.cyb; g.lineWidth=2;
-  g.beginPath(); g.moveTo(cx-22,cy); g.lineTo(cx-7,cy); g.lineTo(cx-3.5,cy+4.5); g.stroke();
-  g.beginPath(); g.moveTo(cx+22,cy); g.lineTo(cx+7,cy); g.lineTo(cx+3.5,cy+4.5); g.stroke();
-  g.fillStyle=C.cyb; g.beginPath(); g.arc(cx,cy,1.8,0,TAU); g.fill();
+  g.strokeStyle=C.hair; g.lineWidth=1.5; g.beginPath(); g.arc(cx,cy,R,0,TAU); g.stroke();
+  g.strokeStyle=C.amber; g.lineWidth=1.6;
+  g.beginPath(); g.moveTo(cx-20,cy); g.lineTo(cx-6,cy); g.lineTo(cx-3,cy+4); g.stroke();
+  g.beginPath(); g.moveTo(cx+20,cy); g.lineTo(cx+6,cy); g.lineTo(cx+3,cy+4); g.stroke();
+  g.fillStyle=C.amber; g.beginPath(); g.arc(cx,cy,1.6,0,TAU); g.fill();
 }
 
-/* ---------- antenna polar plot (中心=天頂, 外周=水平線) ---------- */
+/* ---------- detail: antenna polar ---------- */
 function drawPolar(){
   const f=fitCanvas($("#polar")); if(!f)return; const {g,w,h}=f;
   g.clearRect(0,0,w,h);
-  const cx=w/2,cy=h/2,R=Math.min(w,h)/2-13;
-  g.strokeStyle=C.hair; g.fillStyle=C.mut; g.font="8px "+DIN; g.textAlign="center";
+  const cx=w/2,cy=h/2,R=Math.min(w,h)/2-12;
+  g.strokeStyle=C.hair; g.fillStyle=C.mut; g.font="7.5px "+DIN; g.textAlign="center";
   for(const el of [0,30,60]){g.beginPath();g.arc(cx,cy,R*(90-el)/90,0,TAU);g.stroke();}
   const P=(az,el)=>{const r=R*(90-el)/90,a=az*D2R; return [cx+r*Math.sin(a),cy-r*Math.cos(a)];};
   [["N",0],["E",90],["S",180],["W",270]].forEach(([n,a])=>{
     const [x,y]=P(a,-9); g.fillText(n,x,y+3);
   });
   if(skytrail.length>1){
-    g.strokeStyle=C.cy; g.globalAlpha=.5; g.beginPath();
+    g.strokeStyle=C.teal; g.globalAlpha=.5; g.beginPath();
     skytrail.forEach((p,i)=>{const [x,y]=P(p.az,p.el); i?g.lineTo(x,y):g.moveTo(x,y);});
     g.stroke(); g.globalAlpha=1;
   }
   const [dx,dy]=P(T.az,Math.max(T.el,0));
-  g.fillStyle=C.cyb; g.beginPath(); g.arc(dx,dy,3.5,0,TAU); g.fill();
-  g.strokeStyle=C.amb; g.lineWidth=1.2;
-  g.beginPath(); g.arc(dx,dy,7.5,0,TAU); g.stroke();
-  g.beginPath(); g.moveTo(dx-11,dy); g.lineTo(dx-4.5,dy); g.moveTo(dx+4.5,dy); g.lineTo(dx+11,dy);
-  g.moveTo(dx,dy-11); g.lineTo(dx,dy-4.5); g.moveTo(dx,dy+4.5); g.lineTo(dx,dy+11); g.stroke();
+  g.fillStyle=C.tealb; g.beginPath(); g.arc(dx,dy,3,0,TAU); g.fill();
+  g.strokeStyle=C.amber; g.lineWidth=1.1;
+  g.beginPath(); g.arc(dx,dy,7,0,TAU); g.stroke();
+  g.beginPath(); g.moveTo(dx-10,dy); g.lineTo(dx-4,dy); g.moveTo(dx+4,dy); g.lineTo(dx+10,dy);
+  g.moveTo(dx,dy-10); g.lineTo(dx,dy-4); g.moveTo(dx,dy+4); g.lineTo(dx,dy+10); g.stroke();
 }
 
-/* ---------- mission timeline ---------- */
+/* ---------- detail: strip charts ---------- */
+function makeChart(cvSel,ttSel,key,color,unit){
+  const cv=$(cvSel),tt=$(ttSel); let mouseX=null;
+  cv.addEventListener("mousemove",e=>{mouseX=e.offsetX;});
+  cv.addEventListener("mouseleave",()=>{mouseX=null;tt.style.display="none";});
+  return function draw(){
+    const f=fitCanvas(cv); if(!f)return; const {g,w,h}=f;
+    g.clearRect(0,0,w,h);
+    if(HIST.length<2)return;
+    const padL=24,padB=11,padT=4,pw=w-padL-4,ph=h-padT-padB;
+    const t1=HIST[HIST.length-1].t,t0=t1-120;
+    let vmax=10; for(const s of HIST) if(s[key]>vmax)vmax=s[key];
+    vmax=Math.ceil(vmax*1.15/10)*10;
+    const X=t=>padL+((t-t0)/120)*pw, Y=v=>padT+ph-(v/vmax)*ph;
+    g.strokeStyle=C.hair2; g.fillStyle=C.mut; g.font="8px "+css("--mono"); g.textAlign="right";
+    for(let i=0;i<=2;i++){const v=vmax*i/2,y=Y(v);
+      g.beginPath();g.moveTo(padL,y);g.lineTo(w-4,y);g.stroke();
+      g.fillText(String(Math.round(v)),padL-3,y+3);}
+    for(let dt=-120;dt<=0;dt+=60){const x=X(t1+dt);
+      g.textAlign=dt===0?"right":"center";
+      g.fillText(dt===0?"now":dt+"s",dt===0?w-4:x,h-2);}
+    const pts=HIST.filter(s=>s.t>=t0);
+    g.beginPath(); pts.forEach((s,i)=>{const x=X(s.t),y=Y(s[key]); i?g.lineTo(x,y):g.moveTo(x,y);});
+    g.strokeStyle=color; g.lineWidth=1.6; g.stroke();
+    g.lineTo(X(pts[pts.length-1].t),Y(0)); g.lineTo(X(pts[0].t),Y(0)); g.closePath();
+    g.globalAlpha=.13; g.fillStyle=color; g.fill(); g.globalAlpha=1;
+    const last=pts[pts.length-1],lx=X(last.t),ly=Y(last[key]);
+    g.fillStyle=color; g.beginPath(); g.arc(lx,ly,2.5,0,TAU); g.fill();
+    g.fillStyle=C.ink; g.textAlign="right"; g.font="9px "+css("--mono");
+    g.fillText(last[key].toFixed(1),lx-6,ly-4);
+    if(mouseX!==null&&mouseX>padL){
+      const tm=t0+((mouseX-padL)/pw)*120;
+      let best=pts[0]; for(const s of pts) if(Math.abs(s.t-tm)<Math.abs(best.t-tm))best=s;
+      const bx=X(best.t),by=Y(best[key]);
+      g.strokeStyle=C.mut; g.setLineDash([3,3]);
+      g.beginPath(); g.moveTo(bx,padT); g.lineTo(bx,padT+ph); g.stroke(); g.setLineDash([]);
+      g.fillStyle=color; g.beginPath(); g.arc(bx,by,3,0,TAU); g.fill();
+      g.strokeStyle=C.bg; g.lineWidth=2; g.stroke();
+      tt.style.display="block";
+      tt.style.left=(cv.offsetLeft+Math.min(bx+8,w-110))+"px";
+      tt.style.top=(cv.offsetTop+by-9)+"px";
+      tt.textContent=`${tstamp(best.t)}  ${best[key].toFixed(1)} ${unit}`;
+    } else tt.style.display="none";
+  };
+}
+const drawAltCh=makeChart("#chAlt","#ttAlt","alt",C.chA,"m");
+const drawSpdCh=makeChart("#chSpd","#ttSpd","spd",C.chS,"m/s");
+
+/* ---------- timeline ---------- */
 const NODES=[
   {f:0,l:"LIFTOFF"},{f:.095,l:"CRUISE"},{f:.44,l:"LAP 1"},
-  {f:.79,l:"LAP 2"},{f:.86,l:"RTL"},{f:1,l:"TOUCHDOWN"},
+  {f:.79,l:"LAP 2"},{f:.86,l:"RTL"},{f:1,l:"TD"},
 ];
 const tlNodes=$("#tlNodes");
 NODES.forEach((n,i)=>{
@@ -831,23 +892,26 @@ function missionProgress(){
     case "LANDED": fr=1; break;
     default: fr=lastF;
   }
-  lastF=Math.max(lastF*(T.phase==="PAD"?0:1),fr); // PADに戻ったらリセット
-  if(T.phase==="PAD") lastF=0;
+  if(T.phase==="PAD") lastF=0; else lastF=Math.max(lastF,fr);
   return lastF;
 }
 function updateTimeline(){
   const f=missionProgress();
   $("#tlFill").style.width=(f*100)+"%";
   tlNodes.querySelectorAll(".tl-node").forEach((el,i)=>{
-    el.classList.toggle("done",f>=NODES[i].f-1e-6&&(NODES[i].f===0?f>0||T.phase!=="PAD":true)&&f>=NODES[i].f);
+    el.classList.toggle("done", NODES[i].f===0 ? (f>0||!["PAD"].includes(T.phase)) && f>=0 && T.phase!=="PAD" : f>=NODES[i].f);
   });
 }
 
-/* ---------- numeric readouts ---------- */
+/* ---------- readouts ---------- */
 function fmtLL(v){return v.toFixed(6)+"°";}
 function updateText(){
   $("#tclock").textContent=tstamp(T.t);
-  $("#phaseName").textContent=T.phase+(T.armed?" · ARMED":"");
+  $("#phaseName").textContent=(PHASE_JP[T.phase]||"")+" // "+T.phase+(T.armed?" · ARMED":"");
+  $("#radarData").textContent=
+    `AZ ${T.az.toFixed(1)}°  EL ${T.el.toFixed(1)}°  RSSI ${Math.round(T.rssi)}dBm  LQ ${T.lq}%  ${T.pkt}pkt/s  RNG ${Math.round(T.rng)}m`;
+  updateTimeline(); refreshButtons();
+  if(!$("#stage").classList.contains("detail")) return;
   $("#rAlt").innerHTML=T.z.toFixed(1)+"<small>M</small>";
   $("#rSpd").innerHTML=T.spd.toFixed(1)+"<small>M/S</small>";
   $("#rVz").innerHTML=(T.vz>=0?"+":"")+T.vz.toFixed(1)+"<small>M/S</small>";
@@ -864,16 +928,11 @@ function updateText(){
   $("#rYaw").textContent=String(Math.round(T.hdg)).padStart(3,"0")+"°";
   $("#rAz").textContent=T.az.toFixed(1)+"°"; $("#rEl").textContent=T.el.toFixed(1)+"°";
   $("#rRssi").textContent=Math.round(T.rssi)+" dBm"; $("#rLq").textContent=T.lq+"%";
-  $("#rssiFill").style.width=clamp((T.rssi+100)/60*100,0,100)+"%";
-  $("#pktRate").textContent=T.pkt+" pkt/s";
-  updateTimeline(); refreshButtons();
 }
 
 /* ---------- main loop ---------- */
 function frame(){
-  drawView(); drawMap(); drawAlt(); drawSpd(); drawAtt(); drawPolar();
-  drawGauge("#gSpd",T.spd,20,"SPEED","m/s");
-  drawGauge("#gAlt",T.z,160,"ALTITUDE","m");
+  drawView(); drawRadar(); drawAtt(); drawPolar(); drawAltCh(); drawSpdCh();
   requestAnimationFrame(frame);
 }
 setInterval(updateText,120);
