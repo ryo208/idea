@@ -188,7 +188,7 @@
   <div id="callout" aria-live="polite"></div>
 
   <header id="top">
-    <div class="brand">DOLUCK FLIGHT OPS<small>DRONE GCS · TRACKING STATION 1</small></div>
+    <div class="brand">DOLUCK FLIGHT OPS<small>HOKKAIDO SPACEPORT · TAIKI, JAPAN</small></div>
     <div class="topright">
       <button id="dataBtn" aria-pressed="false">DATA</button>
       <button id="sndBtn" aria-pressed="false">SOUND OFF</button>
@@ -288,7 +288,7 @@
       </div>
     </div>
     <div class="clockblock">
-      <div class="mission">IDEA-1 · DEMO FLIGHT</div>
+      <div class="mission">IDEA-1 · HOKKAIDO SPACEPORT</div>
       <div id="tclock">T- 00:00:10</div>
       <div id="phaseName">PAD</div>
     </div>
@@ -319,7 +319,7 @@ const clamp=(v,a,b)=>Math.min(b,Math.max(a,v));
 const TAU=Math.PI*2, D2R=Math.PI/180;
 const wrap180=a=>((a+180)%360+360)%360-180;
 
-const HOME={lat:34.98525, lon:135.75821};
+const HOME={lat:42.49640, lon:143.44630};   // 北海道スペースポート(大樹町)
 const WPTS=[]; for(let i=0;i<5;i++){const a=-90*D2R+i*TAU/5; WPTS.push({x:260*Math.cos(a),y:260*Math.sin(a)});}
 const CRUISE_ALT=120, LAPS=2;
 
@@ -551,6 +551,218 @@ const C={ink:"#EAF0F6",sec:"rgba(234,240,246,.62)",mut:"rgba(234,240,246,.38)",
   ok:"#6FBF7F",warn:"#D9A741",crit:"#D96B6B",bg:"#04070C"};
 const DIN=css("--din"), MONO="10px "+css("--mono");
 
+/* ================================================================
+   HOSPO(北海道スペースポート・大樹町)の夜間衛星画像風テクスチャ
+   実地形を座標ベースで再現: 太平洋岸(北東-南西)、1300m滑走路、
+   射点LC-0(海岸)/LC-1、ホロカヤントー沼、防風林、十勝の農地グリッド
+   ================================================================ */
+const TEXS=2048, TSPAN=3000, K=TEXS/TSPAN;      // 3km四方 / 約1.46m/px
+const TEX=document.createElement("canvas"); TEX.width=TEX.height=TEXS;
+(function buildTexture(){
+  const g=TEX.getContext("2d");
+  const P=(x,y)=>[TEXS/2+x*K, TEXS/2-y*K];
+  const coastX=y=>880+0.22*y+28*Math.sin(y/260)+14*Math.sin(y/97);   // 海岸線(NE-SW)
+  // --- 農地ベース
+  g.fillStyle="#202c17"; g.fillRect(0,0,TEXS,TEXS);
+  const tones=["#243218","#2a3a1d","#314421","#26351e","#3d4b26","#48522c","#3a3d22","#4f4b2e","#2e3f2a","#57543a"];
+  let wy=-1500;
+  while(wy<1500){
+    const hh=130+Math.random()*240; let wx=-1500;
+    while(wx<1500){
+      const ww=160+Math.random()*300;
+      g.fillStyle=tones[(Math.random()*tones.length)|0];
+      const[a,b]=P(wx,wy+hh);
+      g.fillRect(a,b,ww*K+1,hh*K+1);
+      wx+=ww;
+    }
+    wy+=hh;
+  }
+  // 畝ストライプ
+  g.globalAlpha=.07; g.strokeStyle="#0c130a"; g.lineWidth=1;
+  for(let i=0;i<50;i++){
+    const bx=-1500+Math.random()*3000, by=-1500+Math.random()*3000,
+          bw=180+Math.random()*200, bh=150+Math.random()*180;
+    for(let s=0;s<bw;s+=9){
+      const[a1,b1]=P(bx+s,by),[a2,b2]=P(bx+s,by+bh);
+      g.beginPath(); g.moveTo(a1,b1); g.lineTo(a2,b2); g.stroke();
+    }
+  }
+  g.globalAlpha=1;
+  // --- 森(北側と南西に密集)+散在
+  g.fillStyle="#141f0d";
+  for(let i=0;i<1100;i++){
+    let cx,cy; const r0=Math.random();
+    if(r0<0.4){ cx=-1500+Math.random()*3000; cy=850+Math.random()*650; }
+    else if(r0<0.7){ cx=-1500+Math.random()*1100; cy=-1500+Math.random()*1100; }
+    else { cx=-1500+Math.random()*3000; cy=-1500+Math.random()*3000; }
+    const[a,b]=P(cx,cy);
+    g.globalAlpha=.35+Math.random()*.55;
+    g.beginPath(); g.arc(a,b,(7+Math.random()*22)*K,0,TAU); g.fill();
+  }
+  // 防風林(南北の帯) — 十勝の典型的景観
+  g.globalAlpha=.5;
+  for(let i=0;i<13;i++){
+    const gx=-1400+i*230+Math.random()*60;
+    const[a,b]=P(gx,1500);
+    g.fillRect(a,b,13*K,3000*K);
+  }
+  g.globalAlpha=1;
+  // --- 道路グリッド
+  g.strokeStyle="#3f4038"; g.lineWidth=Math.max(1.5,6*K);
+  const road=(x1,y1,x2,y2)=>{const[a1,b1]=P(x1,y1),[a2,b2]=P(x2,y2);
+    g.beginPath(); g.moveTo(a1,b1); g.lineTo(a2,b2); g.stroke();};
+  for(let gx=-1350;gx<=450;gx+=450) road(gx,-1500,gx,1500);
+  for(let gy=-1350;gy<=1350;gy+=450) road(-1500,gy,820+0.22*gy,gy);
+  // --- ホロカヤントー(海跡湖・南西)
+  {const[a,b]=P(430,-1120);
+   g.fillStyle="#0a161d"; g.save(); g.translate(a,b); g.rotate(-.5);
+   g.beginPath(); g.ellipse(0,0,300*K,110*K,0,0,TAU); g.fill(); g.restore();}
+  // --- 砂浜
+  g.fillStyle="#6d6248";
+  g.beginPath();
+  for(let y=-1500,f=true;y<=1500;y+=40){const[a,b]=P(coastX(y)-55,y); f?g.moveTo(a,b):g.lineTo(a,b); f=false;}
+  for(let y=1500;y>=-1500;y-=40){const[a,b]=P(coastX(y)+80,y); g.lineTo(a,b);}
+  g.closePath(); g.fill();
+  // --- 太平洋
+  const oceanPath=()=>{
+    g.beginPath();
+    for(let y=-1500,f=true;y<=1500;y+=40){const[a,b]=P(coastX(y),y); f?g.moveTo(a,b):g.lineTo(a,b); f=false;}
+    const[a1,b1]=P(1500,1500),[a2,b2]=P(1500,-1500);
+    g.lineTo(a1,b1); g.lineTo(a2,b2); g.closePath();
+  };
+  g.fillStyle="#0d2432"; oceanPath(); g.fill();
+  const og=g.createLinearGradient(P(500,0)[0],0,P(1500,0)[0],0);
+  og.addColorStop(0,"rgba(40,90,115,.25)"); og.addColorStop(1,"rgba(0,0,0,.35)");
+  g.fillStyle=og; oceanPath(); g.fill();
+  // 月光の海面反射
+  {g.save(); oceanPath(); g.clip();
+   const[ma,mb]=P(1150,150);
+   const mg=g.createRadialGradient(ma,mb,0,ma,mb,520*K);
+   mg.addColorStop(0,"rgba(190,215,235,.16)"); mg.addColorStop(1,"rgba(190,215,235,0)");
+   g.fillStyle=mg;
+   g.save(); g.translate(ma,mb); g.scale(0.45,1.6); g.translate(-ma,-mb);
+   g.fillRect(ma-520*K,mb-800*K,1040*K,1600*K); g.restore();
+   g.restore();}
+  // 汀線の泡
+  g.strokeStyle="rgba(210,225,230,.4)"; g.lineWidth=2;
+  g.beginPath();
+  for(let y=-1500,f=true;y<=1500;y+=30){const[a,b]=P(coastX(y)+4,y); f?g.moveTo(a,b):g.lineTo(a,b); f=false;}
+  g.stroke();
+  g.strokeStyle="rgba(210,225,230,.14)";
+  g.beginPath();
+  for(let y=-1500,f=true;y<=1500;y+=30){const[a,b]=P(coastX(y)+28+6*Math.sin(y/70),y); f?g.moveTo(a,b):g.lineTo(a,b); f=false;}
+  g.stroke();
+  // --- 海岸道路
+  g.strokeStyle="#45463e"; g.lineWidth=Math.max(1.5,5*K);
+  g.beginPath();
+  for(let y=-1500,f=true;y<=1500;y+=40){const[a,b]=P(coastX(y)-150,y); f?g.moveTo(a,b):g.lineTo(a,b); f=false;}
+  g.stroke();
+  // LC-0へのアクセス道路
+  {const pts=[[-430,80],[150,-260],[620,-650]];
+   g.beginPath();
+   pts.forEach(([x,y],i)=>{const[a,b]=P(x,y); i?g.lineTo(a,b):g.moveTo(a,b);});
+   g.stroke();}
+  // --- 滑走路(1300m×30m、東西からわずかに傾く)+エプロン+格納庫+夜間照明
+  {const[a0,b0]=P(0,0);
+   g.save(); g.translate(a0,b0); g.rotate(-8*D2R);
+   g.fillStyle="#2e2f31"; g.fillRect(-650*K,-15*K,1300*K,30*K);
+   g.strokeStyle="rgba(230,230,225,.5)"; g.lineWidth=Math.max(1,1.5*K);
+   g.setLineDash([18*K,14*K]);
+   g.beginPath(); g.moveTo(-600*K,0); g.lineTo(600*K,0); g.stroke(); g.setLineDash([]);
+   g.fillStyle="rgba(230,230,225,.45)";
+   for(let s=0;s<6;s++){ g.fillRect(-640*K,(-12+s*4.4)*K,26*K,2.2*K); g.fillRect(614*K,(-12+s*4.4)*K,26*K,2.2*K); }
+   g.fillStyle="#333436";
+   g.fillRect(-520*K,15*K,40*K,90*K);
+   g.fillRect(-560*K,105*K,230*K,115*K);
+   g.fillStyle="#8a8d92"; g.fillRect(-540*K,150*K,60*K,42*K);
+   g.fillStyle="#7d8085"; g.fillRect(-462*K,155*K,52*K,34*K);
+   g.fillStyle="#96999e"; g.fillRect(-396*K,150*K,34*K,30*K);
+   // 夜景化前に照明位置を打つと消えるので、照明はここでは打たない
+   g.restore();}
+  // --- LC-0(海岸の射点: コンクリートパッド+ランチマウント)
+  {const[a,b]=P(640,-680);
+   g.fillStyle="#3b3c3e"; g.fillRect(a-45*K,b-45*K,90*K,90*K);
+   g.fillStyle="#9a9da2"; g.beginPath(); g.arc(a,b,16*K,0,TAU); g.fill();
+   g.fillStyle="#55575a"; g.fillRect(a-72*K,b-8*K,26*K,16*K);}
+  // --- LC-1(北東側・造成地)
+  {const[a,b]=P(520,320);
+   g.fillStyle="#5c5648"; g.fillRect(a-55*K,b-40*K,110*K,80*K);
+   g.fillStyle="#8f9296"; g.beginPath(); g.arc(a+10*K,b,12*K,0,TAU); g.fill();}
+  // --- 粒状ノイズ
+  for(let i=0;i<9000;i++){
+    g.fillStyle=Math.random()<.5?"rgba(255,255,255,.02)":"rgba(0,0,0,.03)";
+    g.fillRect(Math.random()*TEXS,Math.random()*TEXS,2,2);
+  }
+  // --- 夜景化(青い減光)
+  g.fillStyle="rgba(6,14,26,.42)"; g.fillRect(0,0,TEXS,TEXS);
+  // --- 施設照明
+  const light=(x,y,color,r=4,glow=15)=>{const[a,b]=P(x,y);
+    g.shadowColor=color; g.shadowBlur=glow; g.fillStyle=color;
+    g.beginPath(); g.arc(a,b,r,0,TAU); g.fill(); g.shadowBlur=0;};
+  const th8=-8*D2R, c8=Math.cos(th8), s8=Math.sin(th8);
+  const rwPt=(u,v)=>[u*c8+v*s8, -u*s8+v*c8];    // 滑走路ローカル→世界
+  // 滑走路灯(両縁)+スレッショルド灯
+  for(let u=-600;u<=600;u+=80){
+    const[x1,y1]=rwPt(u,-20), [x2,y2]=rwPt(u,20);
+    light(x1,y1,"rgba(255,248,214,.95)",3.5,13); light(x2,y2,"rgba(255,248,214,.95)",3.5,13);
+  }
+  {const[gx,gy]=rwPt(-655,0); light(gx,gy,"rgba(90,255,140,.95)",5,18);}
+  {const[rx2,ry2]=rwPt(655,0); light(rx2,ry2,"rgba(255,90,90,.95)",5,18);}
+  // エプロン投光器
+  {const[x,y]=rwPt(-460,160); light(x,y,"rgba(255,232,170,.95)",6.5,30);}
+  {const[x,y]=rwPt(-360,120); light(x,y,"rgba(255,232,170,.85)",5,22);}
+  // LC-0照明(白4+赤ビーコン)
+  for(const[dx,dy] of [[-38,-38],[38,-38],[-38,38],[38,38]]) light(640+dx,-680+dy,"rgba(240,245,255,.95)",4.5,18);
+  light(640,-680,"rgba(255,70,70,.95)",4,15);
+  // LC-1作業灯
+  light(520,320,"rgba(255,232,170,.8)",5,20);
+  // 海岸道路の常夜灯・農家の灯り
+  for(let y=-1300;y<=1300;y+=420) light(coastX(y)-150,y,"rgba(255,214,140,.6)",3,11);
+  for(let i=0;i<9;i++) light(-1300+Math.random()*1700,-1300+Math.random()*2600,"rgba(255,220,160,.55)",3,10);
+})();
+
+/* ---------- Mode-7: テクスチャ地面を疑似3D投影 ---------- */
+const GC=document.createElement("canvas");
+function drawGroundM7(g,w,h,hy,ov){
+  const scale=3;
+  const gw=Math.max(280,Math.round((w+ov*2)/scale));
+  const gh=Math.max(90,Math.round((h-hy+ov)/scale));
+  if(GC.width!==gw||GC.height!==gh){GC.width=gw;GC.height=gh;}
+  const q=GC.getContext("2d");
+  q.setTransform(1,0,0,1,0,0);
+  q.fillStyle="#111c29"; q.fillRect(0,0,gw,gh);          // 遠景ヘイズ
+  const fl=gw*0.95;
+  const camH=Math.max(T.z,1.5)+2.5;                       // カメラ高度
+  const th=T.hdg*D2R;
+  const fx=Math.sin(th), fy=Math.cos(th);
+  const rx=Math.cos(th), ry=-Math.sin(th);
+  const step=2;
+  for(let r=2;r<gh;r+=step){
+    const d=camH*fl/r;
+    if(d>2600) continue;
+    const px=T.x+fx*d, py=T.y+fy*d;
+    const m=(d/fl)*K;
+    const b=rx*m, e=-ry*m;
+    const a=TEXS/2+px*K, c=TEXS/2-py*K;
+    const inv=1/Math.hypot(b,e);
+    const cphi=b*inv, sphi=e*inv, s=inv;
+    const m11=s*cphi, m12=-s*sphi, m21=s*sphi, m22=s*cphi;
+    const dx=gw/2-(m11*a+m21*c), dy=r-(m12*a+m22*c);
+    q.save();
+    q.beginPath(); q.rect(0,r,gw,step); q.clip();
+    q.setTransform(m11,m12,m21,m22,dx,dy);
+    q.drawImage(TEX,0,0);
+    q.restore();
+  }
+  // 距離ヘイズ(地平線際)
+  const hzH=Math.min(gh*0.35,60);
+  const hz=q.createLinearGradient(0,0,0,hzH);
+  hz.addColorStop(0,"rgba(17,28,41,.9)"); hz.addColorStop(1,"rgba(17,28,41,0)");
+  q.fillStyle=hz; q.fillRect(0,0,gw,hzH);
+  g.imageSmoothingEnabled=true;
+  g.drawImage(GC,-ov,hy,w+ov*2,h-hy+ov);
+}
+
 /* ---------- onboard camera view (full-screen backdrop) ---------- */
 const stars=Array.from({length:170},()=>({a:Math.random(),y:Math.random(),s:Math.random()*1.4+0.4,tw:Math.random()*TAU}));
 let travel=0,lastVT=performance.now();
@@ -560,7 +772,7 @@ function drawView(){
   travel+=T.spd*dt;
   const roll=T.roll*0.55, alt01=clamp(T.z/160,0,1);
   const cy0=h*0.56;
-  const hy=clamp(cy0+T.pitch*(h/80)+alt01*h*0.16, h*0.24, h*0.9);
+  const hy=clamp(cy0+T.pitch*(h/80)-alt01*h*0.12, h*0.3, h*0.9);   // 高度が上がるとカメラが下を向く
   g.clearRect(0,0,w,h);
   g.save();
   g.translate(w/2,cy0); g.rotate(-roll*D2R); g.translate(-w/2,-cy0);
@@ -586,27 +798,8 @@ function drawView(){
   hgl.addColorStop(0,"rgba(127,212,239,0)"); hgl.addColorStop(1,"rgba(127,212,239,.10)");
   g.fillStyle=hgl; g.fillRect(-ov,hy-26,w+ov*2,26);
   g.fillStyle="rgba(160,220,242,.28)"; g.fillRect(-ov,hy-1,w+ov*2,2);
-  // --- ground
-  const gnd=g.createLinearGradient(0,hy,0,h+ov);
-  gnd.addColorStop(0,"rgb(14,20,24)"); gnd.addColorStop(0.25,"rgb(9,13,16)"); gnd.addColorStop(1,"rgb(3,5,7)");
-  g.fillStyle=gnd; g.fillRect(-ov,hy,w+ov*2,h-hy+ov*2);
-  // --- perspective grid (速度でスクロール、高度で縮小)
-  const gh=h-hy+ov, step=26/(1+T.z/45);
-  g.strokeStyle="rgba(127,212,239,.24)"; g.lineWidth=1;
-  const frac=(travel/step)%1, ROWS=22;
-  for(let k=1;k<=ROWS;k++){
-    const p=(k-frac)/ROWS, y=hy+gh*p*p;
-    if(y>h+ov) continue;
-    g.globalAlpha=clamp(p*1.5,0.08,0.8);
-    g.beginPath(); g.moveTo(-ov,y); g.lineTo(w+ov,y); g.stroke();
-  }
-  const VXN=16;
-  for(let i=-VXN;i<=VXN;i++){
-    const xb=w/2+i*(w*0.11);
-    g.globalAlpha=clamp(0.6-Math.abs(i)*0.032,0.07,0.6);
-    g.beginPath(); g.moveTo(w/2+(xb-w/2)*0.04,hy); g.lineTo(xb,h+ov); g.stroke();
-  }
-  g.globalAlpha=1;
+  // --- ground: HOSPO衛星テクスチャをMode-7投影
+  drawGroundM7(g,w,h,hy,ov);
   // --- clouds (高度が上がると眼下に流れる)
   if(T.z>40){
     const ca=clamp((T.z-40)/60,0,1)*0.10;
@@ -694,6 +887,11 @@ function drawMap(){
   g.clearRect(0,0,w,h);
   const scale=Math.min(w,h)/760;
   const X=x=>w/2+x*scale, Y=y=>h/2-y*scale;
+  // 衛星テクスチャ下敷き
+  {const sp=760*K;
+   g.save(); g.globalAlpha=.6;
+   g.drawImage(TEX,TEXS/2-sp/2,TEXS/2-sp/2,sp,sp,0,0,w,h);
+   g.restore();}
   g.strokeStyle=C.hair2; g.lineWidth=1;
   for(let gx=-300;gx<=300;gx+=100){g.beginPath();g.moveTo(X(gx),0);g.lineTo(X(gx),h);g.stroke();
     g.beginPath();g.moveTo(0,Y(gx));g.lineTo(w,Y(gx));g.stroke();}
