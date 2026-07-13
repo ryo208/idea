@@ -42,13 +42,14 @@ python bridge.py --mav udp:0.0.0.0:14550
 
 | 要素 | 内容 |
 |---|---|
-| ターゲットレティクル | 機体を追尾するリング+ブラケット。左弧=速度 / 右弧=高度、データタグ付き |
-| クロック | 上部中央にT+クロックとフェーズ(`巡航 // CRUISE`) |
-| 円形レーダー | 航跡・ウェイポイント・追尾アンテナビーム・回転スイープ。AZ/EL/RSSI/LQ併記 |
-| イベントストリーム | 左下5行、古い行からフェードアウト |
-| コマンド | `[ 起動 ARM ] [ 発進 LAUNCH ] [ 保持 HOLD ] [ 再開 RESUME ] [ 帰投 RTL ] [ 着陸 LAND ]` |
-| タイムライン | 下部中央の極細ライン(LIFTOFF→CRUISE→LAP 1→LAP 2→RTL→TD) |
-| 詳細レイヤー | [詳細 DETAIL] で姿勢儀・アンテナ天球図・チャート等を展開(`?detail=1`) |
+| 下部バー | Starship中継風: FLIGHT クラスタ(速度/高度/バッテリー/モーター)+T+クロック+タイムライン+LINK クラスタ |
+| FLIGHT DATA | 高度・対地速度・昇降率・方位・地上局からの距離 |
+| GROUND TRACK | 地上局中心の航跡マップ。レンジリング100m、アンテナビーム、ウェイポイント |
+| チャート | 高度・対地速度の直近120秒ストリップチャート(ホバーで値表示) |
+| ATTITUDE | 姿勢儀(人工水平儀)+ロール/ピッチ/ヨー |
+| TELEMETRY LINK | 天球ポーラープロット(中心=天頂)、AZ/EL、RSSI、リンク品質 |
+| COMMAND | ARM / LAUNCH / HOLD / RESUME / RTL / LAND(状態に応じて活性化) |
+| EVENT LOG | T±タイムスタンプ付きイベント(LIFTOFF、WAYPOINT ACQUIRED、TOUCHDOWN…) |
 
 ## デザインメモ(v4: SpaceX Starship中継スタイル)
 
