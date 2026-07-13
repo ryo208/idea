@@ -1,0 +1,658 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>DOLUCK GCS — Mission Control</title>
+<style>
+  :root{
+    color-scheme: dark;
+    --bg:#0B0F14; --panel:#10151C; --panel2:#0D1218; --line:#1D2630; --line2:#141B23;
+    --ink:#DCE4EC; --sec:#93A1B0; --mut:#5C6B7A;
+    --cy:#2F9EC2; --cyb:#7FD4EF; --am:#B08A3E; --amb:#E4C079;
+    --ok:#6FBF7F; --warn:#D9A741; --crit:#D96B6B;
+    --mono:ui-monospace,"SF Mono","Cascadia Code",Menlo,Consolas,"Liberation Mono",monospace;
+    --sans:system-ui,"Segoe UI","Hiragino Sans",sans-serif;
+  }
+  html,body{height:100%}
+  body{
+    background:var(--bg); color:var(--ink); font-family:var(--sans);
+    margin:0; overflow-x:hidden;
+  }
+  #app{display:flex; flex-direction:column; min-height:100vh; gap:10px; padding:10px 12px 12px;}
+
+  /* ---------- header ---------- */
+  header{
+    display:flex; align-items:center; gap:20px; flex-wrap:wrap;
+    border:1px solid var(--line); background:var(--panel);
+    padding:10px 16px; border-radius:4px;
+  }
+  .brand{font-size:13px; font-weight:600; letter-spacing:.22em; white-space:nowrap;}
+  .brand small{display:block; color:var(--mut); font-size:10px; letter-spacing:.18em; font-weight:400; margin-top:2px;}
+  .phases{display:flex; gap:2px; flex:1; min-width:280px; justify-content:center;}
+  .ph{
+    font-size:10px; letter-spacing:.16em; color:var(--mut); padding:6px 12px 8px;
+    border-bottom:2px solid var(--line); white-space:nowrap;
+  }
+  .ph.done{color:var(--sec); border-bottom-color:var(--sec);}
+  .ph.act{color:var(--cyb); border-bottom-color:var(--cy);}
+  .clockbox{text-align:center;}
+  #tclock{font-family:var(--mono); font-size:26px; font-weight:300; letter-spacing:.06em; font-variant-numeric:tabular-nums;}
+  #phaseName{font-size:10px; letter-spacing:.2em; color:var(--cyb); margin-top:1px;}
+  .linkstat{display:flex; align-items:center; gap:14px; font-family:var(--mono); font-size:11px; color:var(--sec);}
+  .badge{
+    font-family:var(--sans); font-size:10px; letter-spacing:.14em; padding:3px 10px;
+    border:1px solid var(--line); border-radius:2px; color:var(--sec);
+  }
+  .badge.sim{color:var(--amb); border-color:#4a3d1f;}
+  .badge.live{color:var(--ok); border-color:#2b4a33;}
+
+  /* ---------- layout ---------- */
+  main{display:grid; grid-template-columns:280px minmax(0,1fr) 330px; gap:10px; flex:1; min-height:0;}
+  @media (max-width:1100px){ main{grid-template-columns:1fr;} }
+  .col{display:flex; flex-direction:column; gap:10px; min-width:0;}
+  .panel{border:1px solid var(--line); background:var(--panel); border-radius:4px; padding:12px 14px;}
+  .ptitle{font-size:10px; letter-spacing:.2em; color:var(--mut); margin:0 0 10px;}
+
+  /* ---------- left readouts ---------- */
+  .ro{display:flex; justify-content:space-between; align-items:baseline; padding:7px 0; border-bottom:1px solid var(--line2);}
+  .ro:last-child{border-bottom:0;}
+  .ro .l{font-size:10px; letter-spacing:.16em; color:var(--sec);}
+  .ro .v{font-family:var(--mono); font-size:20px; font-weight:300; font-variant-numeric:tabular-nums;}
+  .ro .v small{font-size:11px; color:var(--mut); margin-left:4px;}
+  .ro .v.big{font-size:28px; color:var(--cyb);}
+  .battbar{height:4px; background:var(--line2); border-radius:2px; margin-top:6px; overflow:hidden;}
+  .battbar i{display:block; height:100%; background:var(--ok); width:100%; transition:width .5s linear;}
+  .battbar i.warn{background:var(--warn);} .battbar i.crit{background:var(--crit);}
+  .gpsline{display:flex; justify-content:space-between; font-family:var(--mono); font-size:12px; color:var(--sec); padding:3px 0; font-variant-numeric:tabular-nums;}
+  .gpsline b{color:var(--ink); font-weight:400;}
+
+  /* ---------- center ---------- */
+  .mapwrap{position:relative; flex:1; min-height:300px; padding:0; overflow:hidden;}
+  canvas{display:block;}
+  #map{width:100%; height:100%;}
+  .maplegend{
+    position:absolute; left:12px; top:10px; font-size:10px; letter-spacing:.16em; color:var(--mut);
+  }
+  .charts{display:grid; grid-template-columns:1fr 1fr; gap:10px;}
+  @media (max-width:1400px){ .charts{grid-template-columns:1fr;} }
+  .chart{position:relative; padding:10px 12px 8px;}
+  .chart canvas{width:100%; height:130px;}
+  .tooltip{
+    position:absolute; pointer-events:none; display:none; z-index:5;
+    background:#0d141bee; border:1px solid var(--line); border-radius:3px;
+    font-family:var(--mono); font-size:11px; padding:5px 8px; white-space:nowrap;
+    font-variant-numeric:tabular-nums;
+  }
+  .gauges{display:flex; gap:10px; justify-content:center;}
+  .gauges .panel{flex:1; display:flex; justify-content:center; padding:8px;}
+  .gauges canvas{width:190px; height:132px;}
+
+  /* ---------- right ---------- */
+  #att{width:100%; height:150px;}
+  #polar{width:100%; height:170px;}
+  .numrow{display:flex; justify-content:space-around; margin-top:6px;}
+  .numrow div{text-align:center;}
+  .numrow .l{font-size:9px; letter-spacing:.16em; color:var(--mut);}
+  .numrow .v{font-family:var(--mono); font-size:15px; font-variant-numeric:tabular-nums;}
+  .rssibar{height:4px; background:var(--line2); border-radius:2px; margin-top:8px; overflow:hidden;}
+  .rssibar i{display:block; height:100%; background:var(--cy); width:0;}
+
+  .cmds{display:grid; grid-template-columns:1fr 1fr 1fr; gap:8px;}
+  .cmds button{
+    font-family:var(--sans); font-size:11px; letter-spacing:.14em; cursor:pointer;
+    background:var(--panel2); color:var(--ink); border:1px solid var(--line);
+    border-radius:3px; padding:10px 4px;
+  }
+  .cmds button:hover:enabled{border-color:var(--cy); color:var(--cyb);}
+  .cmds button:focus-visible{outline:2px solid var(--cyb); outline-offset:1px;}
+  .cmds button:disabled{color:var(--mut); opacity:.45; cursor:default;}
+  .cmds button.danger:hover:enabled{border-color:var(--crit); color:var(--crit);}
+
+  #log{
+    flex:1; min-height:120px; max-height:260px; overflow-y:auto;
+    font-family:var(--mono); font-size:11px; line-height:1.7; font-variant-numeric:tabular-nums;
+  }
+  #log div{border-bottom:1px solid var(--line2); padding:2px 0; display:flex; gap:10px;}
+  #log .ts{color:var(--mut); flex:0 0 84px;}
+  #log .ev{color:var(--sec);} #log .ev.hi{color:var(--cyb);} #log .ev.ok{color:var(--ok);}
+  #log .ev.warn{color:var(--warn);} #log .ev.cmd{color:var(--amb);}
+  @media (prefers-reduced-motion:reduce){ .battbar i{transition:none;} }
+</style>
+</head>
+<body>
+
+<div id="app">
+  <header>
+    <div class="brand">DOLUCK FLIGHT OPS<small>DRONE GCS · MISSION IDEA-1</small></div>
+    <nav class="phases" aria-label="mission phases">
+      <span class="ph" data-ph="PAD">PAD</span>
+      <span class="ph" data-ph="ASCENT">ASCENT</span>
+      <span class="ph" data-ph="CRUISE">CRUISE</span>
+      <span class="ph" data-ph="RTL">RTL</span>
+      <span class="ph" data-ph="LANDING">LANDING</span>
+    </nav>
+    <div class="clockbox">
+      <div id="tclock">T− 00:00:10</div>
+      <div id="phaseName">PAD</div>
+    </div>
+    <div class="linkstat">
+      <span id="linkBadge" class="badge sim">SIM</span>
+      <span id="pktRate">-- pkt/s</span>
+    </div>
+  </header>
+
+  <main>
+    <!-- ================= LEFT : FLIGHT DATA ================= -->
+    <section class="col">
+      <div class="panel">
+        <h2 class="ptitle">FLIGHT DATA</h2>
+        <div class="ro"><span class="l">ALTITUDE</span><span class="v big" id="rAlt">0.0<small>m</small></span></div>
+        <div class="ro"><span class="l">GROUND SPEED</span><span class="v" id="rSpd">0.0<small>m/s</small></span></div>
+        <div class="ro"><span class="l">VERTICAL SPEED</span><span class="v" id="rVz">0.0<small>m/s</small></span></div>
+        <div class="ro"><span class="l">HEADING</span><span class="v" id="rHdg">000<small>°</small></span></div>
+        <div class="ro"><span class="l">RANGE FROM GS</span><span class="v" id="rRng">0<small>m</small></span></div>
+      </div>
+      <div class="panel">
+        <h2 class="ptitle">POWER</h2>
+        <div class="ro"><span class="l">BATTERY</span><span class="v" id="rBatt">100.0<small>%</small></span></div>
+        <div class="ro"><span class="l">VOLTAGE</span><span class="v" id="rVolt">25.20<small>V</small></span></div>
+        <div class="battbar"><i id="battFill"></i></div>
+      </div>
+      <div class="panel">
+        <h2 class="ptitle">GPS</h2>
+        <div class="gpsline"><span>LAT</span><b id="rLat">--</b></div>
+        <div class="gpsline"><span>LON</span><b id="rLon">--</b></div>
+        <div class="gpsline"><span>SATS</span><b id="rSats">--</b></div>
+        <div class="gpsline"><span>HDOP</span><b id="rHdop">--</b></div>
+      </div>
+    </section>
+
+    <!-- ================= CENTER : MAP / CHARTS / GAUGES ================= -->
+    <section class="col">
+      <div class="panel mapwrap">
+        <canvas id="map"></canvas>
+        <span class="maplegend">GROUND TRACK · RINGS 100 m</span>
+      </div>
+      <div class="charts">
+        <div class="panel chart">
+          <h2 class="ptitle">ALTITUDE — LAST 120 s (m)</h2>
+          <canvas id="chAlt"></canvas><div class="tooltip" id="ttAlt"></div>
+        </div>
+        <div class="panel chart">
+          <h2 class="ptitle">GROUND SPEED — LAST 120 s (m/s)</h2>
+          <canvas id="chSpd"></canvas><div class="tooltip" id="ttSpd"></div>
+        </div>
+      </div>
+      <div class="gauges">
+        <div class="panel"><canvas id="gSpd" role="img" aria-label="speed gauge"></canvas></div>
+        <div class="panel"><canvas id="gAlt" role="img" aria-label="altitude gauge"></canvas></div>
+      </div>
+    </section>
+
+    <!-- ================= RIGHT : ATTITUDE / ANTENNA / CMD / LOG ================= -->
+    <section class="col">
+      <div class="panel">
+        <h2 class="ptitle">ATTITUDE</h2>
+        <canvas id="att"></canvas>
+        <div class="numrow">
+          <div><div class="l">ROLL</div><div class="v" id="rRoll">0.0°</div></div>
+          <div><div class="l">PITCH</div><div class="v" id="rPitch">0.0°</div></div>
+          <div><div class="l">YAW</div><div class="v" id="rYaw">000°</div></div>
+        </div>
+      </div>
+      <div class="panel">
+        <h2 class="ptitle">TRACKING ANTENNA</h2>
+        <canvas id="polar"></canvas>
+        <div class="numrow">
+          <div><div class="l">AZ</div><div class="v" id="rAz">000.0°</div></div>
+          <div><div class="l">EL</div><div class="v" id="rEl">0.0°</div></div>
+          <div><div class="l">RSSI</div><div class="v" id="rRssi">-- dBm</div></div>
+          <div><div class="l">LQ</div><div class="v" id="rLq">--%</div></div>
+        </div>
+        <div class="rssibar"><i id="rssiFill"></i></div>
+      </div>
+      <div class="panel">
+        <h2 class="ptitle">COMMAND</h2>
+        <div class="cmds">
+          <button id="cArm">ARM</button>
+          <button id="cLaunch">LAUNCH</button>
+          <button id="cHold">HOLD</button>
+          <button id="cResume">RESUME</button>
+          <button id="cRtl" class="danger">RTL</button>
+          <button id="cLand" class="danger">LAND</button>
+        </div>
+      </div>
+      <div class="panel" style="display:flex;flex-direction:column;min-height:0;flex:1;">
+        <h2 class="ptitle">EVENT LOG</h2>
+        <div id="log" aria-live="polite"></div>
+      </div>
+    </section>
+  </main>
+</div>
+
+<script>
+"use strict";
+/* ================================================================
+   DOLUCK GCS — drone ground-control UI
+   データ源: ws://127.0.0.1:8765 (bridge.py) に接続を試み、
+   失敗したら内蔵フライトシミュレーションにフォールバックする。
+   ================================================================ */
+const $ = s => document.querySelector(s);
+const clamp = (v,a,b)=>Math.min(b,Math.max(a,v));
+const TAU = Math.PI*2, D2R = Math.PI/180;
+const wrap180 = a => { a=((a+180)%360+360)%360-180; return a; };
+
+const HOME = {lat:34.98525, lon:135.75821};       // 地上局(追尾アンテナ)位置
+const WPTS = [];                                   // 5角形の巡回コース(半径260m)
+for (let i=0;i<5;i++){ const a=-90*D2R + i*TAU/5; WPTS.push({x:260*Math.cos(a), y:260*Math.sin(a)}); }
+const CRUISE_ALT=120, LAPS=2;
+
+/* ---------------- telemetry state (描画はこれだけを見る) ---------------- */
+const T = {
+  t:-10, phase:"PAD", armed:false,
+  x:0, y:0, z:0, vz:0, spd:0, hdg:0, roll:0, pitch:0,
+  batt:100, volt:25.2, sats:17, hdop:0.6,
+  az:0, el:0, rssi:-40, lq:100, rng:0,
+  live:false, pkt:0,
+};
+T.lat = HOME.lat; T.lon = HOME.lon;
+
+/* ---------------- event log ---------------- */
+const logEl = $("#log");
+function tstamp(t){
+  const s=Math.abs(t), h=String(Math.floor(s/3600)).padStart(2,"0"),
+        m=String(Math.floor(s%3600/60)).padStart(2,"0"), ss=String(Math.floor(s%60)).padStart(2,"0");
+  return (t<0?"T− ":"T+ ")+h+":"+m+":"+ss;
+}
+function logEv(msg, cls=""){
+  const d=document.createElement("div");
+  d.innerHTML=`<span class="ts">${tstamp(T.t)}</span><span class="ev ${cls}">${msg}</span>`;
+  logEl.prepend(d);
+  while(logEl.children.length>60) logEl.lastChild.remove();
+}
+
+/* ================================================================
+   SIMULATION — 追尾アンテナ付き地上局から見たデモフライト
+   ================================================================ */
+const sim = {
+  on:false, wpi:0, lap:0, holdFrom:null, counting:true, landAnnounced:false,
+  start(){
+    if(this.on) return;
+    this.on=true;
+    logEv("GROUND STATION LINK ESTABLISHED (SIM)","hi");
+    logEv("AUTO SEQUENCE START — T− 10 s","hi");
+    setInterval(()=>this.tick(0.05), 50);
+  },
+  arm(){ if(!T.armed){ T.armed=true; logEv("VEHICLE ARMED","warn"); } },
+  launch(){
+    if(T.phase!=="PAD"&&T.phase!=="LANDED") return;
+    T.phase="PAD"; T.t=-10; this.counting=true; this.wpi=0; this.lap=0;
+    this.arm(); logEv("LAUNCH SEQUENCE — T− 10 s","cmd");
+  },
+  tick(dt){
+    T.t+=dt;
+    // ---- countdown → liftoff
+    if(this.counting){
+      if(T.t>=-3&&!this.armed3){ this.armed3=true; this.arm(); }
+      if(T.t>=0){
+        this.counting=false; T.phase="ASCENT";
+        logEv("LIFTOFF","hi");
+      }
+    }
+    const p=T.phase;
+    // ---- vertical
+    let tgtVz=0, tgtSpd=0, steer=null;
+    if(p==="ASCENT"){ tgtVz=4; tgtSpd=0;
+      if(T.z>=CRUISE_ALT){ T.phase="CRUISE"; logEv(`CRUISE ALT ${CRUISE_ALT} m — WAYPOINT CIRCUIT START`,"hi"); }
+    }
+    else if(p==="CRUISE"){
+      tgtSpd=15; tgtVz=clamp((CRUISE_ALT-T.z)*0.5,-2,2);
+      const wp=WPTS[this.wpi], dx=wp.x-T.x, dy=wp.y-T.y;
+      steer=Math.atan2(dx,dy)/D2R;
+      if(Math.hypot(dx,dy)<28){
+        logEv(`WAYPOINT ${this.wpi+1} ACQUIRED`,"ok");
+        this.wpi=(this.wpi+1)%WPTS.length;
+        if(this.wpi===0){ this.lap++;
+          if(this.lap>=LAPS){ T.phase="RTL"; logEv("CIRCUIT COMPLETE — RETURN TO LAUNCH","hi"); }
+          else logEv(`LAP ${this.lap} COMPLETE`,"ok");
+        }
+      }
+    }
+    else if(p==="HOLD"){ tgtSpd=0; tgtVz=clamp((this.holdAlt-T.z)*0.5,-1,1); }
+    else if(p==="RTL"){
+      tgtSpd=16; tgtVz=clamp((CRUISE_ALT-T.z)*0.5,-2,2);
+      steer=Math.atan2(-T.x,-T.y)/D2R;
+      if(Math.hypot(T.x,T.y)<12){ T.phase="LANDING"; logEv("OVER PAD — LANDING","hi"); }
+    }
+    else if(p==="LANDING"){
+      tgtSpd=0; tgtVz = T.z>12 ? -2.2 : -0.8;
+      if(T.z<=0.05 && !this.counting){
+        T.z=0; T.vz=0; T.phase="LANDED"; T.armed=false;
+        if(!this.landAnnounced){ this.landAnnounced=true; logEv("TOUCHDOWN — VEHICLE SAFE","hi"); logEv("VEHICLE DISARMED","warn"); }
+      }
+    }
+    if(p!=="LANDING") this.landAnnounced=false;
+
+    // ---- steering / kinematics
+    if(steer!==null){
+      const err=wrap180(steer-T.hdg), rate=clamp(err*1.2,-40,40);
+      T.hdg=(T.hdg+rate*dt+360)%360;
+      T.roll = T.roll + (clamp(rate*0.55,-28,28)-T.roll)*dt*4;
+    } else {
+      T.roll += (0-T.roll)*dt*3;
+    }
+    T.spd += clamp(tgtSpd-T.spd,-3*dt*10,3*dt*10)*0.35;
+    T.vz  += (tgtVz-T.vz)*dt*3;
+    T.z   = Math.max(0, T.z+T.vz*dt);
+    T.x  += Math.sin(T.hdg*D2R)*T.spd*dt;
+    T.y  += Math.cos(T.hdg*D2R)*T.spd*dt;
+    T.pitch += (-(T.spd*0.7)+Math.sin(T.t*1.3)*0.6 - T.pitch)*dt*3;
+
+    // ---- power / gps
+    const load = 0.002 + (T.z>0?0.016:0) + T.spd*0.0004;
+    if(T.armed||T.z>0){ T.batt=Math.max(0,T.batt-load*dt*10); }
+    T.volt = 21.0 + 4.2*(T.batt/100) - (T.z>0?0.35:0) + Math.sin(T.t*2.1)*0.02;
+    T.sats = 16 + Math.round(Math.sin(T.t*0.11)*1.5);
+    T.hdop = 0.55 + Math.abs(Math.sin(T.t*0.07))*0.25;
+    T.lat = HOME.lat + T.y/111320;
+    T.lon = HOME.lon + T.x/(111320*Math.cos(HOME.lat*D2R));
+
+    // ---- tracking antenna (サーボ遅れ付きで機体を追尾)
+    const rngH = Math.hypot(T.x,T.y);
+    T.rng = Math.hypot(rngH, T.z);
+    const azT = (Math.atan2(T.x,T.y)/D2R+360)%360;
+    const elT = rngH<1 ? 90 : Math.atan2(T.z,rngH)/D2R;
+    T.az = (T.az + wrap180(azT-T.az)*Math.min(1,dt*2.5) + 360)%360;
+    T.el += (elT-T.el)*Math.min(1,dt*2.5);
+    T.rssi = clamp(-38 - 20*Math.log10(Math.max(T.rng,8)/8) + (Math.random()-0.5)*1.6, -110, -30);
+    T.lq = clamp(Math.round(105 + (T.rssi+45)*1.1 + (Math.random()-0.5)*3), 0, 100);
+    T.pkt = 9 + Math.round(Math.random()*2);
+
+    if(T.batt<25 && !this.battWarned){ this.battWarned=true; logEv("BATTERY LOW — 25%","warn"); }
+  },
+};
+
+/* ---------------- commands ---------------- */
+function sendCmd(name){
+  logEv("CMD ▸ "+name,"cmd");
+  if(T.live && ws && ws.readyState===1){ ws.send(JSON.stringify({cmd:name})); return; }
+  switch(name){
+    case "ARM": sim.arm(); break;
+    case "LAUNCH": sim.launch(); break;
+    case "HOLD": sim.holdAlt=T.z; T.phase="HOLD"; logEv("POSITION HOLD","ok"); break;
+    case "RESUME": T.phase="CRUISE"; logEv("MISSION RESUMED","ok"); break;
+    case "RTL": T.phase="RTL"; logEv("RETURN TO LAUNCH","warn"); break;
+    case "LAND": T.phase="LANDING"; logEv("LANDING AT CURRENT POSITION","warn"); break;
+  }
+}
+const BTN = {ARM:$("#cArm"),LAUNCH:$("#cLaunch"),HOLD:$("#cHold"),RESUME:$("#cResume"),RTL:$("#cRtl"),LAND:$("#cLand")};
+for(const [n,b] of Object.entries(BTN)) b.addEventListener("click",()=>sendCmd(n));
+function refreshButtons(){
+  const air = ["ASCENT","CRUISE","HOLD","RTL"].includes(T.phase);
+  BTN.ARM.disabled    = T.armed || air || T.phase==="LANDING";
+  BTN.LAUNCH.disabled = T.live ? false : !((T.phase==="PAD"&&!sim.counting)||T.phase==="LANDED");
+  BTN.HOLD.disabled   = !["CRUISE","RTL","ASCENT"].includes(T.phase);
+  BTN.RESUME.disabled = T.phase!=="HOLD";
+  BTN.RTL.disabled    = !air || T.phase==="RTL";
+  BTN.LAND.disabled   = !air;
+}
+
+/* ---------------- live link (bridge.py) ---------------- */
+let ws=null;
+(function tryLive(){
+  let opened=false;
+  try{ ws=new WebSocket("ws://127.0.0.1:8765"); }catch(e){ sim.start(); return; }
+  const to=setTimeout(()=>{ if(!opened){ try{ws.close();}catch(e){} sim.start(); } },1200);
+  ws.onopen=()=>{ opened=true; clearTimeout(to); T.live=true;
+    $("#linkBadge").textContent="LIVE"; $("#linkBadge").className="badge live";
+    logEv("LIVE TELEMETRY LINK UP","ok"); };
+  ws.onmessage=e=>{ try{ Object.assign(T, JSON.parse(e.data)); }catch(err){} };
+  ws.onerror=ws.onclose=()=>{ clearTimeout(to); if(!T.live) sim.start();
+    else { T.live=false; logEv("LIVE LINK LOST — SIM FALLBACK","warn"); sim.start(); } };
+})();
+
+/* ================================================================
+   RENDERING
+   ================================================================ */
+function fitCanvas(cv){
+  const dpr=window.devicePixelRatio||1, r=cv.getBoundingClientRect();
+  if(!r.width||!r.height) return null;
+  const w=Math.round(r.width*dpr), h=Math.round(r.height*dpr);
+  if(cv.width!==w||cv.height!==h){ cv.width=w; cv.height=h; }
+  const g=cv.getContext("2d"); g.setTransform(dpr,0,0,dpr,0,0);
+  return {g, w:r.width, h:r.height};
+}
+const css = n => getComputedStyle(document.documentElement).getPropertyValue(n).trim();
+const C = {};
+["--bg","--panel","--line","--line2","--ink","--sec","--mut","--cy","--cyb","--am","--amb","--ok","--warn","--crit"]
+  .forEach(n=>C[n.slice(2)]=css(n));
+const MONO = "12px "+css("--mono");
+
+/* ---------- history buffers (120 s / 5 Hz) ---------- */
+const HIST=[]; const HMAX=600;
+setInterval(()=>{ HIST.push({t:T.t, alt:T.z, spd:T.spd}); if(HIST.length>HMAX) HIST.shift(); },200);
+
+/* ---------- ground-track map ---------- */
+const trail=[];
+setInterval(()=>{ if(T.z>0.2){ trail.push({x:T.x,y:T.y}); if(trail.length>900) trail.shift(); } },150);
+function drawMap(){
+  const f=fitCanvas($("#map")); if(!f) return; const {g,w,h}=f;
+  g.clearRect(0,0,w,h);
+  const scale=Math.min(w,h)/760;            // 表示範囲 ±380 m
+  const X=x=>w/2+x*scale, Y=y=>h/2-y*scale;
+  // grid + range rings
+  g.strokeStyle=C.line2; g.lineWidth=1;
+  for(let gx=-300;gx<=300;gx+=100){ g.beginPath(); g.moveTo(X(gx),0); g.lineTo(X(gx),h); g.stroke();
+                                    g.beginPath(); g.moveTo(0,Y(gx)); g.lineTo(w,Y(gx)); g.stroke(); }
+  g.strokeStyle=C.line;
+  for(let r=100;r<=300;r+=100){ g.beginPath(); g.arc(X(0),Y(0),r*scale,0,TAU); g.stroke(); }
+  g.fillStyle=C.mut; g.font="10px "+css("--sans");
+  g.fillText("N", X(0)-3, Y(330));
+  // waypoint circuit
+  g.strokeStyle=C.mut; g.setLineDash([4,4]); g.beginPath();
+  WPTS.forEach((p,i)=> i?g.lineTo(X(p.x),Y(p.y)):g.moveTo(X(p.x),Y(p.y)));
+  g.closePath(); g.stroke(); g.setLineDash([]);
+  WPTS.forEach((p,i)=>{
+    g.strokeStyle = (sim.on&&T.phase==="CRUISE"&&i===sim.wpi)?C.amb:C.mut;
+    g.strokeRect(X(p.x)-3,Y(p.y)-3,6,6);
+  });
+  // trail
+  if(trail.length>1){
+    g.strokeStyle=C.cy; g.lineWidth=2; g.globalAlpha=.8; g.beginPath();
+    trail.forEach((p,i)=> i?g.lineTo(X(p.x),Y(p.y)):g.moveTo(X(p.x),Y(p.y)));
+    g.stroke(); g.globalAlpha=1;
+  }
+  // ground station + antenna beam
+  g.fillStyle=C.ink; g.beginPath(); g.arc(X(0),Y(0),4,0,TAU); g.fill();
+  g.strokeStyle=C.amb; g.lineWidth=1; g.globalAlpha=.7;
+  const bz=T.az*D2R, bl=Math.min(T.rng,370)*scale;
+  g.beginPath(); g.moveTo(X(0),Y(0)); g.lineTo(X(0)+Math.sin(bz)*bl, Y(0)-Math.cos(bz)*bl); g.stroke();
+  g.globalAlpha=1;
+  g.fillStyle=C.mut; g.fillText("GS", X(0)+7, Y(0)+4);
+  // drone
+  const dx=X(T.x), dy=Y(T.y), a=T.hdg*D2R;
+  g.save(); g.translate(dx,dy); g.rotate(a);
+  g.fillStyle=C.cyb; g.beginPath();
+  g.moveTo(0,-9); g.lineTo(6,7); g.lineTo(0,3.5); g.lineTo(-6,7); g.closePath(); g.fill();
+  g.restore();
+}
+
+/* ---------- strip charts ---------- */
+function makeChart(cvSel, ttSel, key, color, unit){
+  const cv=$(cvSel), tt=$(ttSel); let mouseX=null;
+  cv.addEventListener("mousemove",e=>{ mouseX=e.offsetX; });
+  cv.addEventListener("mouseleave",()=>{ mouseX=null; tt.style.display="none"; });
+  return function draw(){
+    const f=fitCanvas(cv); if(!f) return; const {g,w,h}=f;
+    g.clearRect(0,0,w,h);
+    if(HIST.length<2) return;
+    const padL=34, padB=16, padT=6, pw=w-padL-6, ph=h-padT-padB;
+    const t1=HIST[HIST.length-1].t, t0=t1-120;
+    let vmax=10; for(const s of HIST) if(s[key]>vmax) vmax=s[key];
+    vmax=Math.ceil(vmax*1.15/10)*10;
+    const X=t=>padL+((t-t0)/120)*pw, Y=v=>padT+ph-(v/vmax)*ph;
+    // grid + y labels
+    g.strokeStyle=C.line2; g.fillStyle=C.mut; g.font=MONO; g.textAlign="right";
+    for(let i=0;i<=2;i++){ const v=vmax*i/2, y=Y(v);
+      g.beginPath(); g.moveTo(padL,y); g.lineTo(w-6,y); g.stroke();
+      g.fillText(String(Math.round(v)), padL-5, y+4);
+    }
+    for(let dt=-120;dt<=0;dt+=60){ const x=X(t1+dt);
+      g.textAlign = dt===0 ? "right" : "center";
+      g.fillText(dt===0?"now":dt+"s", dt===0?w-6:x, h-3); }
+    // series
+    const pts=HIST.filter(s=>s.t>=t0);
+    g.beginPath(); pts.forEach((s,i)=>{ const x=X(s.t),y=Y(s[key]); i?g.lineTo(x,y):g.moveTo(x,y); });
+    g.strokeStyle=color; g.lineWidth=2; g.stroke();
+    // area fill (altitudeのみ塗る: colorがcyanのとき)
+    g.lineTo(X(pts[pts.length-1].t),Y(0)); g.lineTo(X(pts[0].t),Y(0)); g.closePath();
+    g.globalAlpha=.12; g.fillStyle=color; g.fill(); g.globalAlpha=1;
+    // endpoint dot + direct label
+    const last=pts[pts.length-1], lx=X(last.t), ly=Y(last[key]);
+    g.fillStyle=color; g.beginPath(); g.arc(lx,ly,3.5,0,TAU); g.fill();
+    g.fillStyle=C.ink; g.textAlign="right"; g.font=MONO;
+    g.fillText(last[key].toFixed(1), lx-8, ly-6);
+    // hover crosshair + tooltip
+    if(mouseX!==null && mouseX>padL){
+      const tm=t0+((mouseX-padL)/pw)*120;
+      let best=pts[0]; for(const s of pts) if(Math.abs(s.t-tm)<Math.abs(best.t-tm)) best=s;
+      const bx=X(best.t), by=Y(best[key]);
+      g.strokeStyle=C.mut; g.setLineDash([3,3]);
+      g.beginPath(); g.moveTo(bx,padT); g.lineTo(bx,padT+ph); g.stroke(); g.setLineDash([]);
+      g.fillStyle=color; g.beginPath(); g.arc(bx,by,4,0,TAU); g.fill();
+      g.strokeStyle=C.bg; g.lineWidth=2; g.stroke();
+      tt.style.display="block";
+      tt.style.left=(cv.offsetLeft+Math.min(bx+10,w-120))+"px";
+      tt.style.top=(cv.offsetTop+by-10)+"px";
+      tt.textContent=`${tstamp(best.t)}  ${best[key].toFixed(1)} ${unit}`;
+    } else tt.style.display="none";
+  };
+}
+const drawAlt=makeChart("#chAlt","#ttAlt","alt",C.cy,"m");
+const drawSpd=makeChart("#chSpd","#ttSpd","spd",C.am,"m/s");
+
+/* ---------- SpaceX-style arc gauges ---------- */
+function drawGauge(sel,val,max,label,unit){
+  const f=fitCanvas($(sel)); if(!f) return; const {g,w,h}=f;
+  g.clearRect(0,0,w,h);
+  const cx=w/2, cy=h*0.62, R=Math.min(w,h)*0.52;
+  const a0=Math.PI*0.85, a1=Math.PI*2.15;
+  g.lineWidth=5; g.lineCap="round";
+  g.strokeStyle=C.line; g.beginPath(); g.arc(cx,cy,R,a0,a1); g.stroke();
+  const fr=clamp(val/max,0,1);
+  if(fr>0.002){ g.strokeStyle=C.cyb; g.beginPath(); g.arc(cx,cy,R,a0,a0+(a1-a0)*fr); g.stroke(); }
+  g.fillStyle=C.ink; g.textAlign="center";
+  g.font="300 30px "+css("--mono");
+  g.fillText(val.toFixed(0), cx, cy+2);
+  g.fillStyle=C.mut; g.font="10px "+css("--sans");
+  g.fillText(unit, cx, cy+18);
+  g.font="10px "+css("--sans"); g.fillStyle=C.sec;
+  g.fillText(label, cx, h-6);
+}
+
+/* ---------- attitude indicator ---------- */
+function drawAtt(){
+  const f=fitCanvas($("#att")); if(!f) return; const {g,w,h}=f;
+  g.clearRect(0,0,w,h);
+  const cx=w/2, cy=h/2, R=Math.min(w,h)/2-6;
+  g.save();
+  g.beginPath(); g.arc(cx,cy,R,0,TAU); g.clip();
+  g.translate(cx,cy); g.rotate(-T.roll*D2R);
+  const off=T.pitch*(R/45);
+  g.fillStyle="#16222e"; g.fillRect(-R*2,-R*2,R*4,R*2+off);   // sky
+  g.fillStyle="#1d1a12"; g.fillRect(-R*2,off,R*4,R*2);        // ground
+  g.strokeStyle=C.sec; g.lineWidth=1.5;
+  g.beginPath(); g.moveTo(-R*2,off); g.lineTo(R*2,off); g.stroke();
+  g.strokeStyle=C.mut; g.fillStyle=C.mut; g.font="9px "+css("--mono"); g.textAlign="center";
+  for(const p of [-20,-10,10,20]){
+    const y=off - p*(R/45), wl=p%20===0?26:16;
+    g.beginPath(); g.moveTo(-wl/2,y); g.lineTo(wl/2,y); g.stroke();
+    if(p%20===0) g.fillText(String(Math.abs(p)), wl/2+10, y+3);
+  }
+  g.restore();
+  // bezel + fixed reference
+  g.strokeStyle=C.line; g.lineWidth=2; g.beginPath(); g.arc(cx,cy,R,0,TAU); g.stroke();
+  g.strokeStyle=C.cyb; g.lineWidth=2;
+  g.beginPath(); g.moveTo(cx-24,cy); g.lineTo(cx-8,cy); g.lineTo(cx-4,cy+5); g.stroke();
+  g.beginPath(); g.moveTo(cx+24,cy); g.lineTo(cx+8,cy); g.lineTo(cx+4,cy+5); g.stroke();
+  g.fillStyle=C.cyb; g.beginPath(); g.arc(cx,cy,2,0,TAU); g.fill();
+}
+
+/* ---------- antenna polar plot (中心=天頂, 外周=水平線) ---------- */
+const skytrail=[];
+setInterval(()=>{ if(T.z>0.5){ skytrail.push({az:T.az,el:T.el}); if(skytrail.length>240) skytrail.shift(); } },250);
+function drawPolar(){
+  const f=fitCanvas($("#polar")); if(!f) return; const {g,w,h}=f;
+  g.clearRect(0,0,w,h);
+  const cx=w/2, cy=h/2, R=Math.min(w,h)/2-14;
+  g.strokeStyle=C.line; g.fillStyle=C.mut; g.font="9px "+css("--sans"); g.textAlign="center";
+  for(const el of [0,30,60]){ g.beginPath(); g.arc(cx,cy,R*(90-el)/90,0,TAU); g.stroke(); }
+  const P=(az,el)=>{ const r=R*(90-el)/90, a=az*D2R; return [cx+r*Math.sin(a), cy-r*Math.cos(a)]; };
+  [["N",0],["E",90],["S",180],["W",270]].forEach(([n,a])=>{
+    const [x,y]=P(a,-8); g.fillText(n,x,y+3);
+  });
+  // sky trail
+  if(skytrail.length>1){
+    g.strokeStyle=C.cy; g.globalAlpha=.5; g.beginPath();
+    skytrail.forEach((p,i)=>{ const [x,y]=P(p.az,p.el); i?g.lineTo(x,y):g.moveTo(x,y); });
+    g.stroke(); g.globalAlpha=1;
+  }
+  // drone position in sky
+  const [dx,dy]=P(T.az,Math.max(T.el,0));
+  g.fillStyle=C.cyb; g.beginPath(); g.arc(dx,dy,4,0,TAU); g.fill();
+  // antenna boresight crosshair
+  g.strokeStyle=C.amb; g.lineWidth=1.2;
+  g.beginPath(); g.arc(dx,dy,8,0,TAU); g.stroke();
+  g.beginPath(); g.moveTo(dx-12,dy); g.lineTo(dx-5,dy); g.moveTo(dx+5,dy); g.lineTo(dx+12,dy);
+  g.moveTo(dx,dy-12); g.lineTo(dx,dy-5); g.moveTo(dx,dy+5); g.lineTo(dx,dy+12); g.stroke();
+}
+
+/* ---------- numeric readouts ---------- */
+const PHASES=["PAD","ASCENT","CRUISE","RTL","LANDING"];
+function phasePill(){
+  const disp = T.phase==="HOLD"?"CRUISE" : T.phase==="LANDED"?"LANDING" : T.phase;
+  const idx=PHASES.indexOf(disp);
+  document.querySelectorAll(".ph").forEach((el,i)=>{
+    el.className="ph"+(i<idx?" done":i===idx?" act":"");
+  });
+}
+function fmtLL(v){ return v.toFixed(6)+"°"; }
+function updateText(){
+  $("#tclock").textContent=tstamp(T.t);
+  $("#phaseName").textContent=T.phase + (T.armed?" · ARMED":"");
+  $("#rAlt").innerHTML=T.z.toFixed(1)+"<small>m</small>";
+  $("#rSpd").innerHTML=T.spd.toFixed(1)+"<small>m/s</small>";
+  $("#rVz").innerHTML=(T.vz>=0?"+":"")+T.vz.toFixed(1)+"<small>m/s</small>";
+  $("#rHdg").innerHTML=String(Math.round(T.hdg)).padStart(3,"0")+"<small>°</small>";
+  $("#rRng").innerHTML=Math.round(T.rng)+"<small>m</small>";
+  $("#rBatt").innerHTML=T.batt.toFixed(1)+"<small>%</small>";
+  $("#rVolt").innerHTML=T.volt.toFixed(2)+"<small>V</small>";
+  const bf=$("#battFill"); bf.style.width=T.batt+"%";
+  bf.className=T.batt<15?"crit":T.batt<30?"warn":"";
+  $("#rLat").textContent=fmtLL(T.lat); $("#rLon").textContent=fmtLL(T.lon);
+  $("#rSats").textContent=T.sats; $("#rHdop").textContent=T.hdop.toFixed(2);
+  $("#rRoll").textContent=T.roll.toFixed(1)+"°";
+  $("#rPitch").textContent=T.pitch.toFixed(1)+"°";
+  $("#rYaw").textContent=String(Math.round(T.hdg)).padStart(3,"0")+"°";
+  $("#rAz").textContent=T.az.toFixed(1)+"°"; $("#rEl").textContent=T.el.toFixed(1)+"°";
+  $("#rRssi").textContent=Math.round(T.rssi)+" dBm"; $("#rLq").textContent=T.lq+"%";
+  $("#rssiFill").style.width=clamp((T.rssi+100)/60*100,0,100)+"%";
+  $("#pktRate").textContent=T.pkt+" pkt/s";
+  phasePill(); refreshButtons();
+}
+
+/* ---------- main loop ---------- */
+function frame(){
+  drawMap(); drawAlt(); drawSpd(); drawAtt(); drawPolar();
+  drawGauge("#gSpd",T.spd,20,"GROUND SPEED","m/s");
+  drawGauge("#gAlt",T.z,160,"ALTITUDE","m");
+  requestAnimationFrame(frame);
+}
+setInterval(updateText,120);
+requestAnimationFrame(frame);
+logEv("DOLUCK GCS READY","hi");
+</script>
+
+</body>
+</html>
