@@ -53,14 +53,15 @@
   .badge.sim{color:var(--amb); border-color:rgba(228,192,121,.35);}
   .badge.live{color:var(--ok); border-color:rgba(111,191,127,.4);}
   #pktRate{color:var(--mut); font-family:var(--mono); font-size:10px;}
-  #sndBtn{background:none; border:1px solid var(--hair); color:var(--sec); font-family:var(--din);
+  #sndBtn,#dataBtn{background:none; border:1px solid var(--hair); color:var(--sec); font-family:var(--din);
     font-size:10px; letter-spacing:.14em; padding:3px 10px; cursor:pointer;}
-  #sndBtn.on{color:var(--cyb); border-color:rgba(127,212,239,.4);}
-  #sndBtn:focus-visible{outline:2px solid var(--cyb);}
+  #sndBtn.on,#dataBtn.on{color:var(--cyb); border-color:rgba(127,212,239,.4);}
+  #sndBtn:focus-visible,#dataBtn:focus-visible{outline:2px solid var(--cyb);}
 
-  /* ---------- side columns ---------- */
+  /* ---------- side columns (デフォルト非表示、[DATA]で展開) ---------- */
   .colwrap{position:absolute; top:64px; bottom:148px; overflow-y:auto; z-index:3;
-    display:flex; flex-direction:column; gap:8px; scrollbar-width:none;}
+    display:none; flex-direction:column; gap:8px; scrollbar-width:none;}
+  #stage.data .colwrap{display:flex;}
   .colwrap::-webkit-scrollbar{display:none;}
   .colwrap{mask-image:linear-gradient(#000 calc(100% - 26px), transparent);
     -webkit-mask-image:linear-gradient(#000 calc(100% - 26px), transparent);}
@@ -101,9 +102,11 @@
   .rssibar{height:3px; background:var(--hair2); margin-top:7px; overflow:hidden;}
   .rssibar i{display:block; height:100%; background:var(--cy); width:0;}
 
-  .cmds{display:grid; grid-template-columns:repeat(3,1fr); gap:6px;}
-  .cmds button{font-family:var(--din); font-size:10.5px; letter-spacing:.16em; cursor:pointer;
-    background:rgba(255,255,255,.04); color:var(--ink); border:1px solid var(--hair); padding:9px 2px;}
+  #cmdbar{position:absolute; right:20px; bottom:160px; z-index:4;}
+  .cmds{display:flex; gap:7px;}
+  .cmds button{font-family:var(--din); font-size:10px; letter-spacing:.16em; cursor:pointer;
+    background:rgba(5,9,15,.55); backdrop-filter:blur(6px); -webkit-backdrop-filter:blur(6px);
+    color:var(--ink); border:1px solid var(--hair); padding:8px 12px;}
   .cmds button:hover:enabled{border-color:var(--cyb); color:var(--cyb); background:rgba(127,212,239,.06);}
   .cmds button:focus-visible{outline:2px solid var(--cyb); outline-offset:1px;}
   .cmds button:disabled{color:var(--mut); opacity:.4; cursor:default;}
@@ -187,6 +190,7 @@
   <header id="top">
     <div class="brand">DOLUCK FLIGHT OPS<small>DRONE GCS · TRACKING STATION 1</small></div>
     <div class="topright">
+      <button id="dataBtn" aria-pressed="false">DATA</button>
       <button id="sndBtn" aria-pressed="false">SOUND OFF</button>
       <span id="linkBadge" class="badge sim">SIM</span>
       <span id="pktRate">-- pkt/s</span>
@@ -252,22 +256,23 @@
       </div>
       <div class="rssibar"><i id="rssiFill"></i></div>
     </div>
-    <div class="panel">
-      <h2 class="ptitle">COMMAND</h2>
-      <div class="cmds">
-        <button id="cArm">ARM</button>
-        <button id="cLaunch">LAUNCH</button>
-        <button id="cHold">HOLD</button>
-        <button id="cResume">RESUME</button>
-        <button id="cRtl" class="danger">RTL</button>
-        <button id="cLand" class="danger">LAND</button>
-      </div>
-    </div>
     <div class="panel logpanel">
       <h2 class="ptitle">EVENT LOG</h2>
       <div id="log" aria-live="polite"></div>
     </div>
   </aside>
+
+  <!-- ============ COMMANDS (常時表示・最小限) ============ -->
+  <div id="cmdbar">
+    <div class="cmds">
+      <button id="cArm">ARM</button>
+      <button id="cLaunch">LAUNCH</button>
+      <button id="cHold">HOLD</button>
+      <button id="cResume">RESUME</button>
+      <button id="cRtl" class="danger">RTL</button>
+      <button id="cLand" class="danger">LAND</button>
+    </div>
+  </div>
 
   <!-- ============ BOTTOM BAR ============ -->
   <footer id="bar">
@@ -353,6 +358,15 @@ function roar(){
   g.gain.exponentialRampToValueAtTime(0.0001,t+3);
   src.start(t);
 }
+
+/* ---------------- data layer toggle ---------------- */
+const dataBtn=$("#dataBtn");
+function setData(on){
+  $("#stage").classList.toggle("data",on);
+  dataBtn.classList.toggle("on",on); dataBtn.setAttribute("aria-pressed",on);
+}
+dataBtn.addEventListener("click",()=>setData(!$("#stage").classList.contains("data")));
+if(/[?&](data|detail)/.test(location.search)) setData(true);
 
 /* ---------------- callout ---------------- */
 const calloutEl=$("#callout"); let calloutTimer=null;
