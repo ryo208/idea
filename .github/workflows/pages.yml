@@ -19,8 +19,9 @@ jobs:
       - uses: actions/checkout@v4
       - name: Build site
         run: |
-          mkdir dist
+          mkdir -p dist/game
           cp drone-gcs/index.html dist/index.html
+          cp money-game/index.html dist/game/index.html
           touch dist/.nojekyll
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v4

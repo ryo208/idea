@@ -12,3 +12,4 @@
 |---|---|---|
 | [`color-sensor/`](./color-sensor/) | ものに触れると色を判別してスマホに飛ばす装置 | Phase 1 プロトタイプ作成済み |
 | [`drone-gcs/`](./drone-gcs/) | ドローン地上管制UI(SpaceX風ミッションコントロール) | デモ動作可・実機ブリッジ付き |
+| [`money-game/`](./money-game/) | 億り人 OKURIBITO — お金が貯まる高揚感クリッカー(Steam構想) | プロトタイプ遊べます |
